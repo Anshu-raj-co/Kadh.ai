@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - Kadh.ai</title>
+    <link rel="stylesheet" href="app_organized.css">
+    <script src="auth.js"></script>
+    <style>
+        /* --- Login Page Styles --- */
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background-color: #f7f7f7; color: #333; display: flex; justify-content: center; align-items: center; min-height: 100vh; padding: 20px; }
+        .auth-container {
+            background-color: #ffffff;
+            padding: 40px 35px;
+            border-radius: 8px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            width: 100%;
+            max-width: 400px;
+            text-align: center;
+        }
+        .auth-logo { width: 80px; margin-bottom: 25px; }
+        .auth-container h1 { font-size: 1.8em; font-weight: 600; color: #222; margin-bottom: 25px; }
+        .form-group { margin-bottom: 20px; text-align: left; }
+        .form-group label { display: block; margin-bottom: 8px; font-weight: 500; font-size: 0.9em; color: #555; }
+        .form-group input {
+            width: 100%; padding: 12px 15px; border: 1px solid #ccc; border-radius: 6px; font-size: 1em;
+            transition: border-color 0.2s ease;
+        }
+        .form-group input:focus { border-color: #f8b400; outline: none; box-shadow: 0 0 0 2px rgba(248, 180, 0, 0.2); }
+        .auth-button {
+            background-color: #f8b400; color: white; border: none; padding: 12px 20px; width: 100%;
+            font-size: 1em; font-weight: 600; border-radius: 6px; cursor: pointer;
+            transition: background-color 0.2s ease, box-shadow 0.2s ease; margin-top: 10px;
+        }
+        .auth-button:hover { background-color: #e0a800; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        .auth-link { margin-top: 25px; font-size: 0.9em; color: #555; }
+        .auth-link a { color: #f8b400; text-decoration: none; font-weight: 500; }
+        .auth-link a:hover { text-decoration: underline; }
+        /* Alert styles */
+        .alert { padding: 10px; margin-bottom: 15px; border-radius: 4px; border: 1px solid transparent; display: none; }
+        .alert-danger { background-color: #f8d7da; color: #721c24; border-color: #f5c6cb; }
+    </style>
+</head>
+<body>
+    <div class="auth-container">
+        <a href="homepage.html"><img src="https://i.ibb.co/x8rsTWDy/kadhai-9.png" alt="Kadhai Logo" class="auth-logo"></a>
+        <h1>Login to Kadh.ai</h1>
+
+        <div id="errorMessage" class="alert alert-danger"></div>
+
+        <form id="loginForm" onsubmit="handleLogin(event)">
+            <div class="form-group">
+                <label for="username">Username</label>
+                <input type="text" id="username" name="username" required>
+            </div>
+            <div class="form-group">
+                <label for="password">Password</label>
+                <input type="password" id="password" name="password" required>
+            </div>
+            <button type="submit" class="auth-button">Login</button>
+        </form>
+        <div class="auth-link">
+            <span>Don't have an account?</span>
+            <a href="signup.html">Sign Up</a>
+        </div>
+        <div class="auth-link" style="margin-top: 10px;">
+            <a href="#">Forgot Password?</a>
+        </div>
+    </div>
+
+    <script>
+        async function handleLogin(event) {
+            event.preventDefault();
+            
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            const errorMessage = document.getElementById('errorMessage');
+            
+            // Clear previous error messages
+            errorMessage.style.display = 'none';
+            
+            try {
+                const response = await fetch('http://localhost:5000/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        username,
+                        password
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    // Store user data in localStorage
+                    localStorage.setItem('userId', data.user_id);
+                    localStorage.setItem('username', data.username);
+                    setAuthenticated(true, username);
+                    
+                    // Redirect to dashboard
+                    window.location.href = 'dashboard.html';
+                } else {
+                    errorMessage.textContent = data.error || 'Invalid username or password';
+                    errorMessage.style.display = 'block';
+                }
+            } catch (error) {
+                errorMessage.textContent = 'Network error occurred. Please try again.';
+                errorMessage.style.display = 'block';
+            }
+        }
+    </script>
+</body>
+</html>

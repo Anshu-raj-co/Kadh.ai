@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Surprise Me! - Kadh.ai</title>
+    <link rel="stylesheet" href="app_organized.css">
+    <script src="auth.js"></script>
+    <style>
+        /* --- Surprise Page Styles --- */
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background-color: #f7f7f7; color: #333; display: flex; flex-direction: column; min-height: 100vh; }
+        /* Navbar & Footer Styles */
+         .navbar { display: flex; align-items: center; justify-content: space-between; box-shadow: 0 2px 4px rgba(0,0,0,0.05); background-color: #ffffff; border-bottom: 1px solid #e0e0e0; height: 65px; padding: 0 40px; position: sticky; top: 0; z-index: 1000; }
+         .navbar p { margin: 0; } .navbar .logo { height: 50px; width: auto; }
+         .nav-links a { color: #555; font-size: 16px; font-weight: 500; text-decoration: none; margin: 0 12px; transition: color 0.2s ease; }
+         .nav-links a:hover, .nav-links a.active { color: #f8b400; }
+         .footer { background-color: #333; color: #ccc; padding: 20px; text-align: center; font-size: 0.9em; margin-top: auto; }
+         .footer a { color: #f8b400; text-decoration: none; } .footer a:hover { text-decoration: underline; }
+
+        .surprise-container {
+            max-width: 800px;
+            margin: 40px auto;
+            padding: 40px 30px;
+            flex-grow: 1;
+            width: 95%;
+            text-align: center;
+            background-color: #ffffff;
+            border-radius: 8px;
+            border: 1px solid #e0e0e0;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        }
+
+        .surprise-container h1 {
+            font-size: 2em;
+            font-weight: 600;
+            color: #222;
+            margin-bottom: 20px;
+        }
+
+        .surprise-container p {
+            font-size: 1.1em;
+            color: #666;
+            margin-bottom: 30px;
+        }
+
+        .surprise-button {
+            background-color: #f8b400;
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            font-size: 1.2em;
+            font-weight: 600;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            margin-bottom: 30px;
+        }
+
+        .surprise-button:hover {
+            background-color: #e0a800;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+
+        .recipe-card {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            padding: 20px;
+            margin-top: 30px;
+            text-align: left;
+            display: none;
+        }
+
+        .recipe-card img {
+            width: 100%;
+            height: 300px;
+            object-fit: cover;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+
+        .recipe-card h2 {
+            font-size: 1.8em;
+            color: #333;
+            margin-bottom: 15px;
+        }
+
+        .recipe-info {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .recipe-info div {
+            background: #f8f9fa;
+            padding: 10px;
+            border-radius: 6px;
+            text-align: center;
+        }
+
+        .recipe-info span {
+            display: block;
+            font-size: 0.9em;
+            color: #666;
+        }
+
+        .recipe-info strong {
+            display: block;
+            color: #333;
+            margin-top: 5px;
+        }
+
+        .recipe-content {
+            margin-top: 20px;
+        }
+
+        .recipe-content h3 {
+            color: #444;
+            margin-bottom: 10px;
+            font-size: 1.3em;
+        }
+
+        .recipe-content ul {
+            list-style-position: inside;
+            margin-bottom: 20px;
+        }
+
+        .recipe-content li {
+            margin-bottom: 8px;
+            color: #555;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .action-button {
+            flex: 1;
+            padding: 12px;
+            border: none;
+            border-radius: 6px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .view-button {
+            background-color: #007bff;
+            color: white;
+        }
+
+        .favorite-button {
+            background-color: #dc3545;
+            color: white;
+        }
+
+        .action-button:hover {
+            opacity: 0.9;
+            transform: translateY(-1px);
+        }
+
+        .loading {
+            display: none;
+            margin: 20px 0;
+            font-style: italic;
+            color: #666;
+        }
+    </style>
+</head>
+<body>
+    <div class="navbar">
+        <a href="homepage.html">
+            <img src="https://i.ibb.co/x8rsTWDy/kadhai-9.png" alt="Kadhai Logo" class="logo">
+        </a>
+        <div class="nav-links">
+            <!-- Navigation will be dynamically updated by auth.js -->
+        </div>
+    </div>
+
+    <div class="surprise-container">
+        <h1>Get a Random Recipe!</h1>
+        <p>Feeling adventurous? Let us pick a random recipe for you!</p>
+        <button class="surprise-button" onclick="getRandomRecipe()">Surprise Me!</button>
+        <div id="loading" class="loading">Finding a delicious recipe for you...</div>
+        <div id="recipe-card" class="recipe-card"></div>
+    </div>
+
+    <div class="footer">
+        <p>&copy; Kadh.ai | <a href="#">Contact</a> | <a href="#">About</a></p>
+    </div>
+
+    <script>
+        async function getRandomRecipe() {
+            const loading = document.getElementById('loading');
+            const recipeCard = document.getElementById('recipe-card');
+            const surpriseButton = document.querySelector('.surprise-button');
+
+            loading.style.display = 'block';
+            recipeCard.style.display = 'none';
+            surpriseButton.disabled = true;
+
+            try {
+                // Get a random recipe directly from the backend
+                const response = await fetch('http://localhost:5000/random_recipe');
+                if (!response.ok) {
+                    throw new Error('Failed to fetch random recipe');
+                }
+
+                const randomRecipe = await response.json();
+                if (!randomRecipe) {
+                    throw new Error('No recipe available');
+                }
+
+                // Parse JSON strings if they are strings, otherwise use as is
+                let ingredients = randomRecipe.ingredients;
+                let instructions = randomRecipe.instructions;
+
+                try {
+                    if (typeof ingredients === 'string') {
+                        ingredients = JSON.parse(ingredients);
+                    }
+                    if (typeof instructions === 'string') {
+                        instructions = JSON.parse(instructions);
+                    }
+                } catch (parseError) {
+                    console.error('Error parsing recipe data:', parseError);
+                    ingredients = [];
+                    instructions = [];
+                }
+
+                // Display the recipe
+                recipeCard.innerHTML = `
+                    <img src="${randomRecipe.image_url || 'placeholder.jpg'}" alt="${randomRecipe.title}">
+                    <h2>${randomRecipe.title}</h2>
+                    
+                    <div class="recipe-info">
+                        <div>
+                            <span>Prep Time</span>
+                            <strong>${randomRecipe.prep_time || 'N/A'}</strong>
+                        </div>
+                        <div>
+                            <span>Cook Time</span>
+                            <strong>${randomRecipe.cook_time || 'N/A'}</strong>
+                        </div>
+                        <div>
+                            <span>Difficulty</span>
+                            <strong>${randomRecipe.difficulty || 'N/A'}</strong>
+                        </div>
+                        <div>
+                            <span>Cuisine</span>
+                            <strong>${randomRecipe.cuisine || 'N/A'}</strong>
+                        </div>
+                    </div>
+
+                    <div class="recipe-content">
+                        <h3>Description</h3>
+                        <p>${randomRecipe.description || 'No description available.'}</p>
+
+                        <h3>Ingredients</h3>
+                        <ul>
+                            ${Array.isArray(ingredients) ? ingredients.map(ingredient => `<li>${ingredient}</li>`).join('') : '<li>No ingredients available</li>'}
+                        </ul>
+
+                        <h3>Instructions</h3>
+                        <ul>
+                            ${Array.isArray(instructions) ? instructions.map(instruction => `<li>${instruction}</li>`).join('') : '<li>No instructions available</li>'}
+                        </ul>
+                    </div>
+
+                    <div class="action-buttons">
+                        <button class="action-button view-button" onclick="viewRecipeDetails(${randomRecipe.id})">
+                            View Full Recipe
+                        </button>
+                        <button class="action-button favorite-button" onclick="addToFavorites(${randomRecipe.id})">
+                            Add to Favorites
+                        </button>
+                    </div>
+                `;
+
+                recipeCard.style.display = 'block';
+
+            } catch (error) {
+                console.error('Error:', error);
+                recipeCard.innerHTML = `
+                    <p style="color: #dc3545; text-align: center;">
+                        Failed to get a random recipe. Please try again.
+                    </p>
+                `;
+                recipeCard.style.display = 'block';
+            } finally {
+                loading.style.display = 'none';
+                surpriseButton.disabled = false;
+            }
+        }
+
+        async function addToFavorites(recipeId) {
+            if (!isAuthenticated()) {
+                window.location.href = 'login.html';
+                return;
+            }
+
+            const userId = getUserId();
+            try {
+                const response = await fetch('http://localhost:5000/favorites', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        user_id: userId,
+                        recipe_id: recipeId
+                    })
+                });
+
+                if (!response.ok) {
+                    throw new Error('Failed to add to favorites');
+                }
+
+                alert('Recipe added to favorites!');
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Failed to add recipe to favorites. Please try again.');
+            }
+        }
+
+        function viewRecipeDetails(recipeId) {
+            window.location.href = `recipe_detail.html?id=${recipeId}`;
+        }
+    </script>
+</body>
+</html>

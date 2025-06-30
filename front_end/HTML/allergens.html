@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manage Allergens - Kadh.ai</title>
+    <link rel="stylesheet" href="app_organized.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Manage Your Allergens</h1>
+            <nav>
+                <a href="homepage.html">Home</a>
+                <a href="favorites.html">Favorites</a>
+                <a href="categories.html">Categories</a>
+            </nav>
+        </header>
+
+        <main>
+            <section class="allergen-section">
+                <h2>Your Current Allergens</h2>
+                <div id="current-allergens" class="allergen-list">
+                    <!-- Allergens will be displayed here -->
+                </div>
+
+                <h2>Add New Allergens</h2>
+                <div class="allergen-form">
+                    <div class="common-allergens">
+                        <h3>Common Allergens</h3>
+                        <div class="allergen-checkboxes">
+                            <label><input type="checkbox" value="peanuts"> Peanuts</label>
+                            <label><input type="checkbox" value="tree-nuts"> Tree Nuts</label>
+                            <label><input type="checkbox" value="milk"> Milk</label>
+                            <label><input type="checkbox" value="eggs"> Eggs</label>
+                            <label><input type="checkbox" value="fish"> Fish</label>
+                            <label><input type="checkbox" value="shellfish"> Shellfish</label>
+                            <label><input type="checkbox" value="soy"> Soy</label>
+                            <label><input type="checkbox" value="wheat"> Wheat</label>
+                            <label><input type="checkbox" value="gluten"> Gluten</label>
+                        </div>
+                    </div>
+
+                    <div class="custom-allergen">
+                        <h3>Custom Allergen</h3>
+                        <input type="text" id="custom-allergen" placeholder="Enter custom allergen">
+                        <button onclick="addCustomAllergen()">Add Custom Allergen</button>
+                    </div>
+
+                    <button class="save-button" onclick="saveAllergens()">Save Allergens</button>
+                </div>
+            </section>
+
+            <section class="safe-recipes">
+                <h2>Your Safe Recipes</h2>
+                <div id="safe-recipes" class="recipe-grid">
+                    <!-- Safe recipes will be displayed here -->
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <script>
+        let currentAllergens = new Set();
+
+        // Load user's current allergens
+        function loadAllergens() {
+            const userId = localStorage.getItem('userId');
+            if (!userId) {
+                window.location.href = 'login.html';
+                return;
+            }
+
+            fetch(`http://localhost:5000/users/${userId}/allergens`)
+                .then(response => response.json())
+                .then(data => {
+                    currentAllergens = new Set(data.allergens.split(','));
+                    updateAllergenDisplay();
+                });
+        }
+
+        // Update the display of current allergens
+        function updateAllergenDisplay() {
+            const container = document.getElementById('current-allergens');
+            container.innerHTML = '';
+            
+            currentAllergens.forEach(allergen => {
+                const allergenElement = document.createElement('div');
+                allergenElement.className = 'allergen-tag';
+                allergenElement.innerHTML = `
+                    ${allergen}
+                    <button onclick="removeAllergen('${allergen}')">×</button>
+                `;
+                container.appendChild(allergenElement);
+            });
+        }
+
+        // Add custom allergen
+        function addCustomAllergen() {
+            const input = document.getElementById('custom-allergen');
+            const allergen = input.value.trim();
+            
+            if (allergen) {
+                currentAllergens.add(allergen);
+                input.value = '';
+                updateAllergenDisplay();
+            }
+        }
+
+        // Remove allergen
+        function removeAllergen(allergen) {
+            currentAllergens.delete(allergen);
+            updateAllergenDisplay();
+        }
+
+        // Save allergens to server
+        function saveAllergens() {
+            const userId = localStorage.getItem('userId');
+            if (!userId) {
+                window.location.href = 'login.html';
+                return;
+            }
+
+            const allergens = Array.from(currentAllergens).join(',');
+            
+            fetch(`http://localhost:5000/users/${userId}/allergens`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ allergens })
+            })
+            .then(response => response.json())
+            .then(data => {
+                alert('Allergens saved successfully!');
+                loadSafeRecipes();
+            });
+        }
+
+        // Load safe recipes
+        function loadSafeRecipes() {
+            const userId = localStorage.getItem('userId');
+            if (!userId) {
+                window.location.href = 'login.html';
+                return;
+            }
+
+            fetch(`http://localhost:5000/recipes/safe/${userId}`)
+                .then(response => response.json())
+                .then(recipes => {
+                    const container = document.getElementById('safe-recipes');
+                    container.innerHTML = '';
+                    
+                    recipes.forEach(recipe => {
+                        const recipeElement = document.createElement('div');
+                        recipeElement.className = 'recipe-card';
+                        recipeElement.innerHTML = `
+                            <h3>${recipe.title}</h3>
+                            <p class="cuisine">${recipe.cuisine}</p>
+                            <p class="ingredients">${recipe.ingredients}</p>
+                            <button onclick="addToFavorites(${recipe.id})">Add to Favorites</button>
+                        `;
+                        container.appendChild(recipeElement);
+                    });
+                });
+        }
+
+        // Add recipe to favorites
+        function addToFavorites(recipeId) {
+            const userId = localStorage.getItem('userId');
+            if (!userId) {
+                window.location.href = 'login.html';
+                return;
+            }
+
+            fetch('http://localhost:5000/favorites', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    user_id: userId,
+                    recipe_id: recipeId
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                alert('Added to favorites!');
+            });
+        }
+
+        // Load data when page loads
+        document.addEventListener('DOMContentLoaded', () => {
+            loadAllergens();
+            loadSafeRecipes();
+        });
+    </script>
+</body>
+</html> 

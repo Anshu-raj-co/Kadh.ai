@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Dashboard - Kadh.ai</title>
+    <link rel="stylesheet" href="app_organized.css">
+    <script src="auth.js"></script>
+    <style>
+        /* Reset and Base Styles */
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: #f7f7f7;
+            color: #333;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+            line-height: 1.6;
+        }
+
+        /* Navbar */
+        .navbar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background-color: #ffffff;
+            border-bottom: 1px solid #e0e0e0;
+            height: 65px;
+            padding: 0 40px;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+
+        .navbar .logo {
+            height: 50px;
+            width: auto;
+        }
+
+        .nav-links a {
+            color: #555;
+            font-size: 16px;
+            font-weight: 500;
+            text-decoration: none;
+            margin: 0 12px;
+            transition: color 0.2s ease;
+        }
+
+        .nav-links a:hover {
+            color: #f8b400;
+        }
+
+        /* Dashboard Container */
+        .dashboard-container {
+            max-width: 1200px;
+            margin: 40px auto;
+            padding: 0 30px;
+            flex-grow: 1;
+        }
+
+        /* Welcome Section */
+        .dashboard-container h1 {
+            font-size: 2.5em;
+            font-weight: 600;
+            color: #222;
+            margin-bottom: 40px;
+            text-align: center;
+        }
+
+        /* Summary Cards */
+        .summary-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 30px;
+            margin-bottom: 50px;
+        }
+
+        .summary-card {
+            background-color: #ffffff;
+            padding: 30px;
+            border-radius: 12px;
+            border: 1px solid #e0e0e0;
+            text-align: center;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .summary-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+
+        .summary-card .metric-value {
+            display: block;
+            font-size: 3em;
+            font-weight: 600;
+            color: #f8b400;
+            margin-bottom: 10px;
+        }
+
+        .summary-card .metric-label {
+            font-size: 1.1em;
+            color: #666;
+        }
+
+        /* Recent Activity Section */
+        .recent-activity-section {
+            background-color: #ffffff;
+            padding: 30px;
+            border-radius: 12px;
+            border: 1px solid #e0e0e0;
+            margin-top: 40px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+
+        .recent-activity-section h2 {
+            font-size: 1.8em;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 30px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #f8b400;
+        }
+
+        .recent-activity-section h3 {
+            font-size: 1.4em;
+            font-weight: 500;
+            color: #444;
+            margin: 25px 0 20px 0;
+        }
+
+        /* Recipe Grid */
+        .recipe-grid-small {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 25px;
+            padding: 10px;
+        }
+
+        .placeholder-text {
+            color: #888;
+            font-style: italic;
+            padding: 40px 20px;
+            text-align: center;
+            background-color: #f9f9f9;
+            border-radius: 8px;
+            grid-column: 1 / -1;
+            font-size: 1.1em;
+        }
+
+        /* Footer */
+        .footer {
+            background-color: #333;
+            color: #ccc;
+            padding: 25px;
+            text-align: center;
+            font-size: 0.9em;
+            margin-top: 60px;
+        }
+
+        .footer a {
+            color: #f8b400;
+            text-decoration: none;
+        }
+
+        .footer a:hover {
+            text-decoration: underline;
+        }
+
+        /* Responsive Adjustments */
+        @media (max-width: 768px) {
+            .dashboard-container {
+                margin: 20px auto;
+                padding: 0 20px;
+            }
+
+            .dashboard-container h1 {
+                font-size: 2em;
+                margin-bottom: 30px;
+            }
+
+            .summary-cards {
+                gap: 20px;
+            }
+
+            .summary-card {
+                padding: 20px;
+            }
+
+            .recent-activity-section {
+                padding: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="navbar">
+        <p><a href="homepage.html">
+            <img src="https://i.ibb.co/x8rsTWDy/kadhai-9.png" alt="Kadhai Logo" class="logo">
+        </a></p>
+        <div class="nav-links">
+            <!-- Navigation links will be dynamically updated by auth.js -->
+        </div>
+    </div>
+
+    <div class="dashboard-container">
+        <h1>Welcome!</h1>
+
+        <div class="summary-cards">
+            <div class="summary-card">
+                <span class="metric-value">[X]</span>
+                <span class="metric-label">Favorite Recipes</span>
+            </div>
+            <div class="summary-card">
+                <span class="metric-value">[Y]</span>
+                <span class="metric-label">Meals Planned</span>
+            </div>
+        </div>
+
+        <div class="recent-activity-section">
+            <h2>Recent Activity</h2>
+            
+            <h3>Favourites</h3>
+            <div id="recentFavoritesList" class="recipe-grid-small">
+                <p class="placeholder-text">Your recent favorites will appear here.</p>
+            </div>
+
+            <h3>Recently Viewed</h3>
+            <div id="recentViewedList" class="recipe-grid-small">
+                <p class="placeholder-text">Your recently viewed recipes will appear here.</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="footer">
+        <p>&copy; Kadh.ai | <a href="#">Contact</a> | <a href="#">About</a></p>
+    </div>
+</body>
+</html>

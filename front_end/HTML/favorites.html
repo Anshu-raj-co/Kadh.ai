@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Favorite Recipes - Kadhai</title>
+    <link rel="stylesheet" href="app_organized.css">
+    <script src="auth.js"></script>
+    <style>
+        /* --- Favorites Page Styles --- */
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background-color: #f7f7f7; color: #333; display: flex; flex-direction: column; min-height: 100vh; }
+        /* Navbar Styles */
+        .navbar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background-color: #ffffff;
+            border-bottom: 1px solid #e0e0e0;
+            height: 65px;
+            padding: 0 40px;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+
+        .navbar .logo {
+            height: 50px;
+            width: auto;
+        }
+
+        .nav-links {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .nav-links a {
+            color: #555;
+            font-size: 16px;
+            font-weight: 500;
+            text-decoration: none;
+            margin: 0 12px;
+            transition: color 0.2s ease;
+        }
+
+        .nav-links a:hover {
+            color: #f8b400;
+        }
+
+        @media (max-width: 768px) {
+            .nav-links {
+                position: absolute;
+                top: 65px;
+                left: 0;
+                right: 0;
+                background: white;
+                padding: 10px 20px;
+                box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+                display: flex;
+                flex-direction: row;
+                justify-content: center;
+                flex-wrap: wrap;
+                gap: 8px;
+            }
+            .nav-links a {
+                margin: 5px 10px;
+            }
+        }
+
+        /* Footer Styles */
+        .footer { background-color: #333; color: #ccc; padding: 20px; text-align: center; font-size: 0.9em; margin-top: auto; }
+        .footer a { color: #f8b400; text-decoration: none; } .footer a:hover { text-decoration: underline; }
+
+        .content-container { max-width: 1100px; margin: 30px auto; padding: 20px 30px; flex-grow: 1; width: 95%; }
+        .content-container h1 { font-size: 2em; font-weight: 600; color: #222; margin-bottom: 30px; text-align: center; }
+
+        /* Results Grid */
+        .recipe-results-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 25px; margin-top: 20px; }
+        .placeholder-text { color: #888; font-style: italic; padding: 30px 10px; text-align: center; background-color: #f0f0f0; border-radius: 6px; grid-column: 1 / -1; }
+        /* Recipe Card Styles */
+        .recipe-card { background: #fff; border-radius: 8px; overflow: hidden; border: 1px solid #eee; box-shadow: 0 1px 3px rgba(0,0,0,0.05); position: relative; transition: box-shadow 0.2s ease; text-decoration: none; display: block; color: inherit;}
+        .recipe-card:hover { box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+        .recipe-card img { width: 100%; height: 180px; object-fit: cover; display: block; }
+        .recipe-card h3 { font-size: 1.1em; padding: 15px 15px 5px 15px; margin: 0; color: #333; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;}
+        .recipe-card p { font-size: 0.9em; color: #777; padding: 0 15px 15px 15px; margin: 0;}
+        /* Remove Button Overlay */
+        .remove-fav-btn-overlay {
+            position: absolute; top: 10px; right: 10px; background-color: rgba(220, 53, 69, 0.8); color: white; border: none;
+            border-radius: 50%; width: 30px; height: 30px; font-size: 1.2em; line-height: 28px; text-align: center;
+            padding: 0; box-shadow: 0 1px 3px rgba(0,0,0,0.3); transition: background-color 0.2s ease; z-index: 10; cursor: pointer;
+        }
+        .remove-fav-btn-overlay:hover { background-color: rgba(200, 33, 49, 1); }
+        /* Add details button if needed inside card */
+        .recipe-card .card-actions { padding: 0 15px 15px 15px; text-align: right; }
+        .recipe-card .details-btn { /* Example style */
+            padding: 6px 12px; font-size: 0.9em; cursor: pointer; border-radius: 4px; border: 1px solid #007bff; background-color: #007bff; color:white;
+        }
+    </style>
+</head>
+<body>
+    <div class="navbar">
+        <a href="homepage.html">
+            <img src="https://i.ibb.co/x8rsTWDy/kadhai-9.png" alt="Kadhai Logo" class="logo">
+        </a>
+        <div class="nav-links">
+            <!-- Navigation will be dynamically updated by auth.js -->
+        </div>
+    </div>
+
+    <div class="content-container">
+        <h1>My Favorite Recipes</h1>
+        <div id="favorites-container" class="recipe-results-grid">
+            <p class="placeholder-text">Loading your favorite recipes...</p>
+        </div>
+    </div>
+
+    <div class="footer">
+        <p>&copy; Kadh.ai | <a href="#">Contact</a> | <a href="#">About</a></p>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', async () => {
+            const favoritesContainer = document.getElementById('favorites-container');
+
+            // Check if user is authenticated
+            if (!isAuthenticated()) {
+                window.location.href = 'login.html';
+                return;
+            }
+
+            const userId = getUserId();
+            if (!userId) {
+                favoritesContainer.innerHTML = '<p class="placeholder-text">Please log in to view your favorites.</p>';
+                return;
+            }
+
+            try {
+                const response = await fetch(`http://localhost:5000/favorites/${userId}`);
+                if (!response.ok) {
+                    throw new Error('Failed to fetch favorites');
+                }
+
+                const favorites = await response.json();
+
+                if (favorites.length === 0) {
+                    favoritesContainer.innerHTML = '<p class="placeholder-text">You haven\'t saved any recipes yet.</p>';
+                    return;
+                }
+
+                // Clear the container
+                favoritesContainer.innerHTML = '';
+
+                // Create recipe cards for each favorite
+                favorites.forEach(recipe => {
+                    const card = document.createElement('div');
+                    card.className = 'recipe-card';
+                    card.id = `recipe-${recipe.id}`;
+                    
+                    card.innerHTML = `
+                        <img src="${recipe.image_url || 'placeholder.jpg'}" alt="${recipe.title}">
+                        <button class="remove-fav-btn-overlay" onclick="removeFavorite(${recipe.id})">×</button>
+                        <h3>${recipe.title}</h3>
+                        <p>${recipe.description || ''}</p>
+                        <div class="recipe-details">
+                            <span>Prep: ${recipe.prep_time || 'N/A'}</span>
+                            <span>Cook: ${recipe.cook_time || 'N/A'}</span>
+                            <span>Difficulty: ${recipe.difficulty || 'N/A'}</span>
+                        </div>
+                        <div class="card-actions">
+                            <button class="details-btn" onclick="showRecipeDetails(${recipe.id})">View Details</button>
+                        </div>
+                    `;
+
+                    favoritesContainer.appendChild(card);
+                });
+
+            } catch (error) {
+                console.error('Error:', error);
+                favoritesContainer.innerHTML = '<p class="placeholder-text">Failed to load favorite recipes. Please try again later.</p>';
+            }
+        });
+
+        async function removeFavorite(recipeId) {
+            const userId = getUserId();
+            if (!userId) return;
+
+            try {
+                const response = await fetch('http://localhost:5000/favorites', {
+                    method: 'DELETE',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        user_id: userId,
+                        recipe_id: recipeId
+                    })
+                });
+
+                if (!response.ok) {
+                    throw new Error('Failed to remove favorite');
+                }
+
+                // Remove the recipe card from UI
+                const card = document.getElementById(`recipe-${recipeId}`);
+                if (card) {
+                    card.remove();
+                }
+
+                // Check if there are any favorites left
+                const favoritesContainer = document.getElementById('favorites-container');
+                if (favoritesContainer.children.length === 0) {
+                    favoritesContainer.innerHTML = '<p class="placeholder-text">You haven\'t saved any recipes yet.</p>';
+                }
+
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Failed to remove recipe from favorites. Please try again.');
+            }
+        }
+
+        function showRecipeDetails(recipeId) {
+            window.location.href = `recipe_detail.html?id=${recipeId}`;
+        }
+    </script>
+</body>
+</html>

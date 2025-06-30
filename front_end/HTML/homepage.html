@@ -1,0 +1,436 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kadh.ai - Your Personalized Recipe Generator</title>
+    <link rel="stylesheet" href="app_organized.css">
+    <script src="auth.js"></script>
+    <script src="recipes.js"></script>
+    <script src="search.js" defer></script>
+    <style>
+        /* Reset and Base Styles */
+        * { 
+            box-sizing: border-box; 
+            margin: 0; 
+            padding: 0; 
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: #f7f7f7;
+            color: #333;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+
+        /* Navbar */
+        .navbar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background-color: #ffffff;
+            border-bottom: 1px solid #e0e0e0;
+            height: 65px;
+            padding: 0 40px;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+
+        .navbar .logo {
+            height: 50px;
+            width: auto;
+        }
+
+        .nav-links a {
+            color: #555;
+            font-size: 16px;
+            font-weight: 500;
+            text-decoration: none;
+            margin: 0 12px;
+            transition: color 0.2s ease;
+        }
+
+        .nav-links a:hover {
+            color: #f8b400;
+        }
+
+        /* Hero Section */
+        .hero {
+            background: linear-gradient(to bottom, #ffffff, #f0f0f0);
+            text-align: center;
+            padding: 80px 20px 60px 20px;
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .hero-content h1 {
+            font-size: 2.8em;
+            font-weight: 600;
+            color: #222;
+            margin-bottom: 15px;
+        }
+
+        .hero-content p {
+            font-size: 1.1em;
+            color: #555;
+            margin-bottom: 30px;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        .hero img {
+            width: 150px;
+            animation: float 3s infinite ease-in-out;
+        }
+        @keyframes float {
+         0%, 100% { transform: translateY(0); }
+        50% { transform: translateY(-10px); }
+        }        
+
+        /* Search Section */
+        .search-section {
+            max-width: 800px;
+            margin: 0 auto;
+            text-align: center;
+        }
+
+        .search-bar {
+            max-width: 600px;
+            margin: 0 auto 30px;
+            display: flex;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            border-radius: 50px;
+            overflow: hidden;
+            background: white;
+        }
+
+        .search-bar input {
+            flex-grow: 1;
+            padding: 15px 25px;
+            font-size: 16px;
+            border: none;
+            outline: none;
+            border-radius: 50px 0 0 50px;
+        }
+
+        .search-bar button {
+            padding: 15px 30px;
+            font-size: 16px;
+            background-color: #f8b400;
+            color: white;
+            border: none;
+            cursor: pointer;
+            border-radius: 0 50px 50px 0;
+            transition: background-color 0.2s ease;
+        }
+
+        .search-bar button:hover {
+            background-color: #e0a800;
+        }
+
+        /* Category Filters */
+        .category-filters {
+            display: flex;
+            justify-content: center;
+            gap: 12px;
+            flex-wrap: wrap;
+            margin: 20px auto;
+        }
+
+        .category-btn {
+            padding: 8px 20px;
+            border: none;
+            border-radius: 25px;
+            background-color: #f0f0f0;
+            color: #555;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .category-btn:hover {
+            background-color: #e0e0e0;
+        }
+
+        .category-btn.active {
+            background-color: #f8b400;
+            color: white;
+        }
+
+        /* Search Results */
+        .search-results {
+            margin-top: 30px;
+            margin-left: -30%;
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 20px;
+            padding: 20px;
+        }
+
+        .recipe-card {
+            background: white;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            transition: transform 0.2s ease;
+        }
+
+        .recipe-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .recipe-card img {
+            width: 100%;
+            height: 200px;
+            object-fit: cover;
+        }
+
+        .recipe-content {
+            padding: 15px;
+        }
+
+        .recipe-content h3 {
+            margin: 0 0 10px;
+            font-size: 1.2em;
+            color: #333;
+        }
+
+        .recipe-content p {
+            color: #666;
+            font-size: 0.9em;
+            margin-bottom: 10px;
+            line-height: 1.4;
+        }
+
+        .recipe-meta {
+            display: flex;
+            justify-content: space-between;
+            color: #888;
+            font-size: 0.85em;
+        }
+
+        .loading, .error, .no-results {
+            grid-column: 1 / -1;
+            text-align: center;
+            padding: 40px;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .loading {
+            color: #666;
+        }
+
+        .error {
+            color: #dc3545;
+        }
+
+        .no-results {
+            color: #666;
+            font-style: italic;
+        }
+
+        /* Footer */
+        .footer {
+            background-color: #333;
+            color: #ccc;
+            padding: 25px;
+            text-align: center;
+            font-size: 0.9em;
+            margin-top: auto;
+        }
+
+        .footer a {
+            color: #f8b400;
+            text-decoration: none;
+        }
+
+        .footer a:hover {
+            text-decoration: underline;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .hero-content h1 {
+                font-size: 2em;
+            }
+
+            .search-bar {
+                flex-direction: column;
+                border-radius: 12px;
+                margin: 0 20px;
+            }
+
+            .search-bar input,
+            .search-bar button {
+                border-radius: 0;
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="navbar">
+        <a href="homepage.html">
+            <img src="https://i.ibb.co/x8rsTWDy/kadhai-9.png" alt="Kadhai Logo" class="logo">
+        </a>
+        <div class="nav-links">
+            <a href="homepage.html">Home</a>
+            <a href="dashboard.html">Dashboard</a>
+            <a href="login.html" id="loginLink">Login</a>
+            <a href="signup.html" id="signupLink">Sign Up</a>
+            <a href="#" id="logoutLink" style="display: none;">Logout</a>
+        </div>
+    </div>
+
+    <div class="hero">
+        <div class="hero-content">
+            <img src="https://i.ibb.co/nqV8n4Vk/just-kadhai.png" alt="Floating Kadhai" class="floating-kadhai">
+        <div class="hero-content">
+        </div>
+            <h1>Find Your Perfect Recipe</h1>
+            <p>Search through our collection of delicious recipes and craft the perfect meal!</p>
+            
+            <div class="search-section">
+                <form class="search-bar" onsubmit="return false;">
+                    <input type="text" id="searchInput" placeholder="Enter ingredients or recipe name...">
+                    <button type="submit">Search</button>
+                </form>
+                
+                <div class="category-filters">
+                    <button class="category-btn" data-category="Seafood">Seafood</button>
+                    <button class="category-btn" data-category="Beef">Beef</button>
+                    <button class="category-btn" data-category="Chicken">Chicken</button>
+                    <button class="category-btn" data-category="Pasta">Pasta</button>
+                    <button class="category-btn" data-category="Pork">Pork</button>
+                    <button class="category-btn" data-category="Vegetarian">Vegetarian</button>
+                </div>
+                
+                <div class="search-results"></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="footer">
+        <p>&copy; Kadh.ai | <a href="#">Contact</a> | <a href="#">About</a></p>
+    </div>
+
+    <script>
+        // Handle category filters
+        const categoryButtons = document.querySelectorAll('.category-btn');
+        const searchInput = document.querySelector('.search-bar input');
+        const searchButton = document.querySelector('.search-bar button');
+        const searchResults = document.querySelector('.search-results');
+        let selectedCategories = new Set();
+
+        categoryButtons.forEach(button => {
+            button.addEventListener('click', () => {
+                const category = button.textContent.toLowerCase();
+                if (button.classList.contains('active')) {
+                    button.classList.remove('active');
+                    selectedCategories.delete(category);
+                } else {
+                    button.classList.add('active');
+                    selectedCategories.add(category);
+                }
+                if (searchInput.value) {
+                    performSearch();
+                }
+            });
+        });
+
+        // Handle search functionality
+        async function performSearch() {
+            const searchTerm = searchInput.value.trim();
+            const categories = Array.from(selectedCategories);
+            
+            if (!searchTerm && categories.length === 0) {
+                alert("Please enter a search term or select a category");
+                return;
+            }
+
+            // Clear previous results
+            searchResults.innerHTML = '<div class="loading">Searching...</div>';
+
+            try {
+                // Update URL with search parameters without page reload
+                const params = new URLSearchParams(window.location.search);
+                if (searchTerm) params.set('q', searchTerm);
+                else params.delete('q');
+                if (categories.length > 0) params.set('categories', categories.join(','));
+                else params.delete('categories');
+                window.history.replaceState({}, '', `${window.location.pathname}?${params.toString()}`);
+
+                // TODO: Replace this with your actual API call
+                const response = await fetch(`/api/recipes/search?q=${encodeURIComponent(searchTerm)}&categories=${categories.join(',')}`);
+                const data = await response.json();
+
+                // Display results
+                displaySearchResults(data);
+            } catch (error) {
+                searchResults.innerHTML = '<div class="error">Error fetching results. Please try again.</div>';
+                console.error('Search error:', error);
+            }
+        }
+
+        // Display search results
+        function displaySearchResults(results) {
+            if (!results || results.length === 0) {
+                searchResults.innerHTML = '<div class="no-results">No recipes found. Try different search terms or categories.</div>';
+                return;
+            }
+
+            searchResults.innerHTML = results.map(recipe => `
+                <div class="recipe-card">
+                    <img src="${recipe.image || 'default-recipe.jpg'}" alt="${recipe.title}">
+                    <div class="recipe-content">
+                        <h3>${recipe.title}</h3>
+                        <p>${recipe.description || ''}</p>
+                        <div class="recipe-meta">
+                            <span>${recipe.cookTime || ''}</span>
+                            <span>${recipe.difficulty || ''}</span>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // Search button click handler
+        searchButton.addEventListener('click', performSearch);
+
+        // Enter key handler
+        searchInput.addEventListener('keypress', (event) => {
+            if (event.key === "Enter") {
+                event.preventDefault();
+                performSearch();
+            }
+        });
+
+        // Initialize from URL parameters if they exist
+        window.addEventListener('load', () => {
+            const params = new URLSearchParams(window.location.search);
+            const categories = params.get('categories')?.split(',') || [];
+            categories.forEach(category => {
+                const button = document.querySelector(`.category-btn:contains(${category})`);
+                if (button) {
+                    button.classList.add('active');
+                    selectedCategories.add(category);
+                }
+            });
+            
+            const query = params.get('q');
+            if (query) {
+                searchInput.value = query;
+                performSearch();
+            }
+        });
+    </script>
+</body>
+</html>
