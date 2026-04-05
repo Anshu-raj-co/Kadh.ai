@@ -1,36 +1,40 @@
-# Kadh.ai
+# *Kadh.ai*
 An intelligent, AI-powered culinary assistant that transforms your available ingredients into structured, macro-balanced recipes.
 
-*📖 Overview*
+# *Overview*
 Kadh.ai was built to solve the daily "what's for dinner" dilemma while minimizing food waste. By inputting available pantry ingredients, dietary restrictions, and allergies, the application leverages the Gemini AI model to dynamically generate diverse, high-quality recipe options.
 
 Note: This project was originally prototyped in Python/Flask and has been completely re-architected into a modern, full-stack Next.js application.
 
-# *✨ Key Features*
+# *Key Features*
 Pantry-to-Plate Generation: Input your current ingredients and let AI generate distinct, actionable recipes.
+
 Strict Dietary Guardrails: Enforces hard constraints for allergies and specific aversions to ensure safe recipe generation.
+
 Granular Nutritional Data: Automatically calculates realistic serving sizes, caloric density, macros (Protein, Carbs, Fat, Fiber), and a proprietary "Health Score."
+
 Dynamic Media Integration: Automatically fetches high-resolution, contextually relevant food photography via the Unsplash API based on the generated recipe title.
+
 Persistent Library: Server-side integration with Supabase allows users to save generated recipes to a community database for future browsing.
+
 Responsive, Modern UI: Built with Tailwind CSS and Lucide React icons, featuring loading state animations and interactive recipe cards.
 
-# *🛠️ Technical Stack*
+# *Technical Stack*
 Frontend: Next.js (React), Tailwind CSS, TypeScript
 Backend: Next.js API Routes (Serverless Functions)
 Database: Supabase (PostgreSQL)
 AI Provider: Google Generative AI (Gemini 1.5 Flash)
 Image Provider: Unsplash API
 
-# *🧠 System Architecture*
+# *System Architecture*
 Kadh.ai utilizes a strict Client-Server architecture to protect API keys and manage database rate limits.
 Client: The React frontend collects user parameters and orchestrates UI loading states.
 API Route (/api/generate): Intercepts the request, engineers the prompt, and queries the Gemini AI.
 Parallel Processing: Once the text is generated, the server simultaneously fetches imagery from Unsplash and executes a Service_Role insert to Supabase.
 Hydration: The fully formed, database-backed recipe object is returned to the client for immediate, seamless rendering.
 
-## 📂 Project Structure
-
-```text
+# *Project Structure*
+Plaintext
 Kadh.ai/
 ├── public/
 │   └── kadh-hero.png             # Static assets and images
@@ -68,8 +72,7 @@ Kadh.ai/
 ├── tailwind.config.ts            # Tailwind design system configuration
 └── README.md                     # Project documentation
 
-
-# *🚀 Local Development Setup*
+# *Local Development Setup*
 1. Clone the repository
 
 Bash
@@ -108,9 +111,3 @@ Open http://localhost:3000 to view the application.
 Anshu Raj
 GitHub
 LinkedIn (https://www.linkedin.com/in/anshu-raj-373349287/)
-
-💡 How to use this:
-Create a file named README.md in the root of your VS Code project.
-Paste this entire text into it.
-Replace the *(Add your link here)* under your name with your actual LinkedIn URL.
-Run git add README.md, git commit -m "Add professional README", and git push to send it to GitHub.
