@@ -14,7 +14,8 @@ https://kadh-ai.vercel.app/
 
 ### 🔹 Recipe Generation Flow
 
-![Demo GIF](./public/demo.gif)
+![Kadhaidemonstration-ezgif com-video-to-gif-converter](https://github.com/user-attachments/assets/fb43bc3b-8d48-45ae-8c22-8478c49a3b15)
+
 
 ### 🔹 Example Output
 
@@ -35,6 +36,13 @@ onion, tomato, paneer
 * Health Score: 8.2 / 10
 
 ![Generated Recipe](./public/kadh-hero.png)
+
+## 📸 Screenshots
+
+![Home](./public/home.png)
+![Result](./public/result1.png)
+![Result2](./public/result2.png)
+![Saved](./public/saved.png)
 
 ---
 
