@@ -39,10 +39,12 @@ Hydration: The fully formed, database-backed recipe object is returned to the cl
 Bash
 git clone https://github.com/Anshu-raj-co/Kadh.ai.git
 cd Kadh.ai
+
 2. Install dependencies
 
 Bash
 npm install
+
 3. Configure Environment Variables
 Create a .env.local file in the root directory and add your API keys:
 
