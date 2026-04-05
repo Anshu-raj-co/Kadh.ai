@@ -6,7 +6,7 @@
 
 ## 🚀 Live Demo
 
-*https://kadh-ai.vercel.app/
+https://kadh-ai.vercel.app/
 
 ---
 
