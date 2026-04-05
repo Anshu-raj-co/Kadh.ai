@@ -150,7 +150,25 @@ Kadh.ai follows a **secure client-server architecture**:
 * **Database:** Supabase (PostgreSQL)
 * **AI Provider:** Google Gemini 1.5 Flash
 * **Media:** Unsplash API
+## 🧩 Key Engineering Decisions
 
+- **Serverless API Layer (Next.js API Routes)**  
+  Chose server-side API routes to securely handle Gemini API calls and protect sensitive keys from client exposure.
+
+- **Parallel Processing for Performance**  
+  Designed the system to fetch AI-generated recipes, images (Unsplash), and database writes simultaneously, reducing total response latency.
+
+- **Structured Prompt Engineering**  
+  Crafted prompts to enforce strict dietary constraints, structured outputs, and nutritional consistency rather than relying on free-form generation.
+
+- **Supabase for Scalable Persistence**  
+  Used Supabase (PostgreSQL) to enable serverless, scalable storage of generated recipes with minimal backend overhead.
+
+- **Component-Based UI Architecture**  
+  Built reusable React components (RecipeCard, NutritionPanel, etc.) to maintain clean separation of concerns and scalability.
+
+- **Stateless System Design (Intentional Trade-off)**  
+  Kept the system stateless to ensure simplicity, fast response times, and reliability, while leaving room for future personalization features.
 ---
 
 ## 📂 Project Structure
