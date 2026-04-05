@@ -6,7 +6,7 @@
 
 ## 🚀 Live Demo
 
-👉 *[Add your deployed link here]* (Vercel recommended)
+*https://kadh-ai.vercel.app/
 
 ---
 
