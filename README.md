@@ -238,6 +238,12 @@ npm run dev
 
 ---
 
+## ⚠️ Limitations
+
+- AI-generated recipes may vary in consistency due to the probabilistic nature of LLMs  
+- Nutritional values are estimated and not clinically accurate  
+- No user-level personalization or memory in the current version  
+- Performance depends on external API response times (Gemini, Unsplash, Supabase)  
 ## 🗺️ Future Roadmap
 
 * [ ] User authentication (Supabase Auth)
