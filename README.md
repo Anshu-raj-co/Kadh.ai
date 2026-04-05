@@ -37,6 +37,12 @@ onion, tomato, paneer
 
 ![Generated Recipe](./public/kadh-hero.png)
 
+## 📸 Screenshots
+
+![Home](./public/home.png)
+![Result](./public/result.png)
+![Saved](./public/saved.png)
+
 ---
 
 ## 🧠 Overview
