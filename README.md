@@ -10,6 +10,23 @@ https://kadh-ai.vercel.app/
 
 ---
 
+## ❓ Why Kadh.ai?
+
+Everyday cooking decisions are surprisingly complex:
+- Limited ingredients at home  
+- Dietary restrictions or allergies  
+- Confusion about what’s healthy or balanced  
+
+Most tools either provide static recipes or ignore real-world constraints.
+
+Kadh.ai solves this by transforming **user constraints into intelligent outputs** — generating recipes that are not just creative, but also nutritionally structured and context-aware.
+
+Instead of asking:
+> “What recipe should I follow?”
+
+Kadh.ai answers:
+> “What is the best possible meal I can make right now?”
+
 ## 📸 Demo Preview
 
 ### 🔹 Recipe Generation Flow
