@@ -27,6 +27,8 @@ Instead of asking:
 Kadh.ai answers:
 > “What is the best possible meal I can make right now?”
 
+This project is designed as a step toward building a truly intelligent, decision-driven cooking assistant.
+
 ## 📸 Demo Preview
 
 ### 🔹 Recipe Generation Flow
