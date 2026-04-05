@@ -130,14 +130,41 @@ Kadh.ai follows a **secure client-server architecture**:
 
 ```
 Kadh.ai/
+├── public/
+│   └── kadh-hero.png             # Static assets and images
 ├── src/
-│   ├── app/
-│   │   ├── api/generate/       # Core AI + API logic
-│   │   ├── find/               # Recipe generation UI
-│   │   ├── recipe/[id]/        # Dynamic recipe page
-│   │   ├── saved/              # Saved recipes
-│   ├── components/             # Reusable UI components
-│   ├── lib/                    # Supabase utilities
+│   ├── app/                      # Next.js App Router (Pages & API)
+│   │   ├── api/                  # Serverless API Endpoints
+│   │   │   ├── generate/
+│   │   │   │   └── route.ts      # Gemini AI integration & Unsplash logic
+│   │   │   ├── photo/
+│   │   │   │   └── route.ts      # Legacy client-side Unsplash fetching
+│   │   │   └── seed/
+│   │   │       └── route.ts      # Supabase database seeding script
+│   │   ├── find/
+│   │   │   └── page.tsx          # Core recipe generation UI & forms
+│   │   ├── recipe/
+│   │   │   └── [id]/
+│   │   │       └── page.tsx      # Dynamic individual recipe detail view
+│   │   ├── saved/
+│   │   │   └── page.tsx          # User's saved community recipes library
+│   │   ├── globals.css           # Tailwind CSS configuration & global styles
+│   │   ├── layout.tsx            # Root application layout shell
+│   │   ├── not-found.tsx         # Custom 404 error page
+│   │   └── page.tsx              # Application landing/home page
+│   ├── components/               # Reusable React UI Components
+│   │   ├── AllergySelector.tsx   # Dietary preference toggles
+│   │   ├── IngredientInput.tsx   # Dynamic input for pantry items
+│   │   ├── Navbar.tsx            # Global navigation header
+│   │   ├── NutritionPanel.tsx    # Macros and health score visualizer
+│   │   └── RecipeCard.tsx        # Reusable recipe preview card
+│   └── lib/                      # Shared Utilities & Configs
+│       └── supabase.ts           # Supabase client and DB helper functions
+├── .env.local                    # Secret environment variables (ignored in Git)
+├── next.config.mjs               # Next.js framework configuration
+├── package.json                  # NPM dependencies and project scripts
+├── tailwind.config.ts            # Tailwind design system configuration
+└── README.md                     # Project documentation
 ```
 
 ---
