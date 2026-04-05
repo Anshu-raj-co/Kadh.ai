@@ -18,13 +18,18 @@ export interface RecipeRow {
   fat: number
   fiber: number
   ingredients: string[]
-  steps: string[]
+  // Upgraded to any[] to support both old string arrays and new object arrays
+  steps: any[]
   tags: string[]
   image_url: string | null
   created_at: string
   emoji?: string
   difficulty?: string
   tips?: string
+  // ── NEW FIELDS FOR PROFESSIONAL UPGRADE ──
+  substitutions?: string[]
+  chef_insight?: string
+  goal?: string
 }
 
 export interface Database {
