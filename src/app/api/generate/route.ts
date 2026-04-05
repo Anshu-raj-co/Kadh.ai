@@ -7,67 +7,52 @@ import type { RecipeRow } from '@/lib/supabase'
 
 interface GenerateRequestBody {
   ingredients: string[]
-  allergies: string[]
-  avoids: string[]
-  prefs: string[]
-  count?: number   // how many recipes to return, default 3
+  allergies:   string[]
+  avoids:      string[]
+  prefs:       string[]
+  count?:      number
 }
 
 export interface GeneratedRecipe {
-  title: string
-  description: string
-  time: string
-  servings: number
+  title:        string
+  description:  string
+  time:         string
+  servings:     number
   health_score: number
-  calories: number
-  protein: number
-  carbs: number
-  fat: number
-  fiber: number
-  ingredients: string[]
-  steps: string[]
-  tags: string[]
-  difficulty: string
-  tips: string
-  emoji: string
+  calories:     number
+  protein:      number
+  carbs:        number
+  fat:          number
+  fiber:        number
+  ingredients:  string[]
+  steps:        string[]
+  tags:         string[]
+  difficulty:   string
+  tips:         string
+  emoji:        string
 }
 
-// ── Schema: an ARRAY of recipe objects ───────────────────────────────────────
+// ── Gemini Schema ─────────────────────────────────────────────────────────────
 
 const SINGLE_RECIPE_SCHEMA = {
   type: SchemaType.OBJECT,
   properties: {
-    title: { type: SchemaType.STRING, description: 'Recipe name, concise and appetizing' },
-    description: { type: SchemaType.STRING, description: 'Two-sentence appetizing description' },
-    time: { type: SchemaType.STRING, description: 'Total cook time e.g. "35 min"' },
-    servings: { type: SchemaType.INTEGER, description: 'Number of servings' },
+    title:        { type: SchemaType.STRING,  description: 'Recipe name, concise and appetizing' },
+    description:  { type: SchemaType.STRING,  description: 'Two-sentence appetizing description' },
+    time:         { type: SchemaType.STRING,  description: 'Total cook time e.g. "35 min"' },
+    servings:     { type: SchemaType.INTEGER, description: 'Number of servings' },
     health_score: { type: SchemaType.INTEGER, description: 'Health score 0-100' },
-    calories: { type: SchemaType.INTEGER, description: 'Calories per serving (kcal)' },
-    protein: { type: SchemaType.INTEGER, description: 'Protein per serving in grams' },
-    carbs: { type: SchemaType.INTEGER, description: 'Carbs per serving in grams' },
-    fat: { type: SchemaType.INTEGER, description: 'Fat per serving in grams' },
-    fiber: { type: SchemaType.INTEGER, description: 'Fiber per serving in grams' },
-    ingredients: {
-      type: SchemaType.ARRAY,
-      items: { type: SchemaType.STRING },
-      description: 'Each as "quantity unit ingredient" e.g. "2 cups basmati rice"',
-    },
-    steps: {
-      type: SchemaType.ARRAY,
-      items: { type: SchemaType.STRING },
-      description: 'Step-by-step cooking instructions, one action per step',
-    },
-    tags: {
-      type: SchemaType.ARRAY,
-      items: { type: SchemaType.STRING },
-      description: 'Up to 4 descriptive tags',
-    },
-    difficulty: {
-      type: SchemaType.STRING,
-      enum: ['Easy', 'Medium', 'Hard'],
-    },
-    tips: { type: SchemaType.STRING, description: 'One expert chef tip' },
-    emoji: { type: SchemaType.STRING, description: 'One emoji for the dish' },
+    calories:     { type: SchemaType.INTEGER, description: 'Calories per serving (kcal)' },
+    protein:      { type: SchemaType.INTEGER, description: 'Protein per serving in grams' },
+    carbs:        { type: SchemaType.INTEGER, description: 'Carbs per serving in grams' },
+    fat:          { type: SchemaType.INTEGER, description: 'Fat per serving in grams' },
+    fiber:        { type: SchemaType.INTEGER, description: 'Fiber per serving in grams' },
+    ingredients:  { type: SchemaType.ARRAY, items: { type: SchemaType.STRING }, description: 'Each as "quantity unit ingredient"' },
+    steps:        { type: SchemaType.ARRAY, items: { type: SchemaType.STRING }, description: 'Step-by-step cooking instructions' },
+    tags:         { type: SchemaType.ARRAY, items: { type: SchemaType.STRING }, description: 'Up to 4 descriptive tags' },
+    difficulty:   { type: SchemaType.STRING, enum: ['Easy', 'Medium', 'Hard'] },
+    tips:         { type: SchemaType.STRING, description: 'One expert chef tip' },
+    emoji:        { type: SchemaType.STRING, description: 'One emoji for the dish' },
   },
   required: [
     'title', 'description', 'time', 'servings',
@@ -77,8 +62,89 @@ const SINGLE_RECIPE_SCHEMA = {
 }
 
 const RECIPES_ARRAY_SCHEMA = {
-  type: SchemaType.ARRAY,
+  type:  SchemaType.ARRAY,
   items: SINGLE_RECIPE_SCHEMA,
+}
+
+// ── Fallback image pool ───────────────────────────────────────────────────────
+// Used when Unsplash returns no results or the key is missing.
+// All are real, publicly accessible Unsplash food images (no auth required at
+// these URLs — they're direct CDN links, not API responses).
+
+const FALLBACK_IMAGES = [
+  'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=800&auto=format&fit=crop',
+  'https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=800&auto=format&fit=crop',
+  'https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=800&auto=format&fit=crop',
+  'https://images.unsplash.com/photo-1565299543923-37dd37887442?w=800&auto=format&fit=crop',
+  'https://images.unsplash.com/photo-1567620905732-2d1ec7ab7445?w=800&auto=format&fit=crop',
+  'https://images.unsplash.com/photo-1540189549336-e6e99c3679fe?w=800&auto=format&fit=crop',
+  'https://images.unsplash.com/photo-1565958011703-44f9829ba187?w=800&auto=format&fit=crop',
+  'https://images.unsplash.com/photo-1482049016688-2d3e1b311543?w=800&auto=format&fit=crop',
+]
+
+function getRandomFallback(): string {
+  return FALLBACK_IMAGES[Math.floor(Math.random() * FALLBACK_IMAGES.length)]
+}
+
+// ── Unsplash helper ───────────────────────────────────────────────────────────
+
+async function fetchUnsplashPhoto(recipeTitle: string): Promise<string> {
+  const unsplashKey = process.env.UNSPLASH_ACCESS_KEY
+
+  // No key configured → use fallback immediately, no wasted API call
+  if (!unsplashKey) {
+    console.warn('[generate] UNSPLASH_ACCESS_KEY not set, using fallback image')
+    return getRandomFallback()
+  }
+
+  try {
+    // Strip emojis and punctuation from title, append "food dish" for better results
+    const cleanTitle = recipeTitle
+      .replace(/\p{Emoji}/gu, '')
+      .replace(/[^\w\s]/g, '')
+      .trim()
+    const query = `${cleanTitle} food dish`
+
+    const url = new URL('https://api.unsplash.com/search/photos')
+    url.searchParams.set('query', query)
+    url.searchParams.set('per_page', '3')          // fetch 3, pick first — gives more buffer
+    url.searchParams.set('orientation', 'landscape')
+    url.searchParams.set('content_filter', 'high')
+
+    const res = await fetch(url.toString(), {
+      headers: {
+        Authorization: `Client-ID ${unsplashKey}`,
+        'Accept-Version': 'v1',
+      },
+      // Vercel edge cache: cache the same query for 24h to save rate limit
+      next: { revalidate: 86400 },
+    })
+
+    if (!res.ok) {
+      console.error(`[generate] Unsplash API error: ${res.status} ${res.statusText}`)
+      return getRandomFallback()
+    }
+
+    const data = await res.json() as {
+      results: Array<{ urls: { regular: string } }>
+    }
+
+    const imageUrl = data.results?.[0]?.urls?.regular
+
+    if (!imageUrl) {
+      console.warn(`[generate] Unsplash returned 0 results for: "${query}"`)
+      return getRandomFallback()
+    }
+
+    // Append Unsplash sizing params so we get a consistent 800px wide image
+    return imageUrl.includes('?')
+      ? `${imageUrl}&w=800&auto=format&fit=crop`
+      : `${imageUrl}?w=800&auto=format&fit=crop`
+
+  } catch (err) {
+    console.error('[generate] Unsplash fetch threw:', err)
+    return getRandomFallback()
+  }
 }
 
 // ── Prompts ───────────────────────────────────────────────────────────────────
@@ -102,8 +168,8 @@ function buildUserPrompt(body: GenerateRequestBody): string {
     `Available ingredients: ${ingredients.join(', ')}`,
   ]
   if (allergies.length) lines.push(`Allergies — NEVER use these: ${allergies.join(', ')}`)
-  if (avoids.length) lines.push(`Disliked or unavailable: ${avoids.join(', ')}`)
-  if (prefs.length) lines.push(`Dietary preferences: ${prefs.join(', ')}`)
+  if (avoids.length)    lines.push(`Disliked or unavailable: ${avoids.join(', ')}`)
+  if (prefs.length)     lines.push(`Dietary preferences: ${prefs.join(', ')}`)
   lines.push(`Return an array of exactly ${count} recipe objects.`)
   return lines.join('\n')
 }
@@ -142,12 +208,12 @@ export async function POST(req: NextRequest) {
   if (!apiKey) {
     console.error('[generate] GEMINI_API_KEY is missing.')
     return NextResponse.json(
-      { error: 'AI service is not configured. Add GEMINI_API_KEY to .env.local' },
+      { error: 'AI service is not configured. Add GEMINI_API_KEY to your environment variables.' },
       { status: 500 }
     )
   }
 
-  // ── Step 1: Generate recipes with Gemini ─────────────────────────────────
+  // ── STEP 1: Generate recipes with Gemini ────────────────────────────────────
 
   let generatedRecipes: GeneratedRecipe[]
 
@@ -159,10 +225,10 @@ export async function POST(req: NextRequest) {
       systemInstruction: SYSTEM_PROMPT,
       generationConfig: {
         responseMimeType: 'application/json',
-        responseSchema: RECIPES_ARRAY_SCHEMA as never,
-        temperature: 0.9,
-        topP: 0.95,
-        maxOutputTokens: 8192,
+        responseSchema:   RECIPES_ARRAY_SCHEMA as never,
+        temperature:      0.9,
+        topP:             0.95,
+        maxOutputTokens:  8192,
       },
     })
 
@@ -187,122 +253,96 @@ export async function POST(req: NextRequest) {
     const message = err instanceof Error ? err.message : String(err)
 
     if (message.includes('quota') || message.includes('429')) {
-      return NextResponse.json(
-        { error: 'AI quota exceeded. Please wait a moment and try again.' },
-        { status: 429 }
-      )
+      return NextResponse.json({ error: 'AI quota exceeded. Please wait a moment and try again.' }, { status: 429 })
     }
     if (message.includes('API_KEY') || message.includes('401') || message.includes('403')) {
-      return NextResponse.json(
-        { error: 'Invalid Gemini API key. Check GEMINI_API_KEY in .env.local.' },
-        { status: 401 }
-      )
+      return NextResponse.json({ error: 'Invalid Gemini API key. Check your environment variables.' }, { status: 401 })
     }
-    return NextResponse.json(
-      { error: `Generation failed: ${message}` },
-      { status: 500 }
-    )
+    return NextResponse.json({ error: `Generation failed: ${message}` }, { status: 500 })
   }
 
-  // ── Step 2: Fetch one Unsplash photo per recipe in parallel ──────────────
-  // Done here on the server so the service key never touches the client.
+  // ── STEP 2: Fetch Unsplash photos in parallel ───────────────────────────────
+  // fetchUnsplashPhoto() always resolves (never throws) — it falls back to a
+  // curated image pool if Unsplash fails or the key is missing.
 
-  const photoResults = await Promise.allSettled(
-    generatedRecipes.map(async (r) => {
-      try {
-        const unsplashKey = process.env.UNSPLASH_ACCESS_KEY
-        if (!unsplashKey) return null
-
-        const cleanTitle = r.title.split('with')[0].split('in')[0].trim();
-        const query = `${cleanTitle} dish food`;
-        const url = `https://api.unsplash.com/search/photos?query=${encodeURIComponent(query)}&per_page=1&orientation=landscape&content_filter=high`
-
-        const res = await fetch(url, {
-          headers: { Authorization: `Client-ID ${unsplashKey}`, 'Accept-Version': 'v1' },
-        })
-        if (!res.ok) return null
-
-        const data = await res.json() as { results: Array<{ urls: { regular: string } }> }
-        return data.results?.[0]?.urls?.regular ?? null
-      } catch {
-        return null
-      }
-    })
+  const imageUrls: string[] = await Promise.all(
+    generatedRecipes.map(r => fetchUnsplashPhoto(r.title))
   )
 
-  // ── Step 3: Save every recipe to Supabase on the server ──────────────────
-  // insertRecipe uses SUPABASE_SERVICE_ROLE_KEY which only exists server-side.
-  // This is the root fix for Issue 1 — no recipe was ever reaching the DB before.
+  // ── STEP 3: Save every recipe to Supabase — SERVER SIDE ONLY ───────────────
+  // This is the critical fix for the 404 bug.
+  //
+  // insertRecipe() uses createAdminClient() which reads SUPABASE_SERVICE_ROLE_KEY.
+  // That env var has NO "NEXT_PUBLIC_" prefix → it is ONLY available in server-side
+  // code (Route Handlers, Server Components, Server Actions).
+  //
+  // The old find/page.tsx (a 'use client' component) was calling insertRecipe()
+  // directly — on the browser, SUPABASE_SERVICE_ROLE_KEY is undefined, so every
+  // insert silently failed, and fake crypto.randomUUID() IDs were returned to the
+  // UI. Clicking any card sent the user to /recipe/[fake-id] which doesn't exist
+  // in the database → notFound().
+  //
+  // Fix: ALL saving happens here. The client receives real DB UUIDs in the response
+  // and uses them directly for navigation. No saving logic should remain in find/page.tsx.
 
   const savedRows: (RecipeRow | null)[] = await Promise.all(
     generatedRecipes.map(async (r, i) => {
-      const imageUrl = photoResults[i].status === 'fulfilled'
-        ? (photoResults[i] as PromiseFulfilledResult<string | null>).value
-        : null
-
       const row = await insertRecipe({
-        title: r.title,
-        description: r.description,
-        time: r.time,
-        servings: r.servings,
+        title:        r.title,
+        description:  r.description,
+        time:         r.time,
+        servings:     r.servings,
         health_score: r.health_score,
-        calories: r.calories,
-        protein: r.protein,
-        carbs: r.carbs,
-        fat: r.fat,
-        fiber: r.fiber,
-        ingredients: r.ingredients,
-        steps: r.steps,
-        tags: r.tags,
-        image_url: imageUrl,
+        calories:     r.calories,
+        protein:      r.protein,
+        carbs:        r.carbs,
+        fat:          r.fat,
+        fiber:        r.fiber,
+        ingredients:  r.ingredients,
+        steps:        r.steps,
+        tags:         r.tags,
+        image_url:    imageUrls[i],   // always a real URL — never null
       })
 
       if (row) {
         console.log(`[generate] 💾 Saved: "${r.title}" → id=${row.id}`)
       } else {
-        console.warn(`[generate] ⚠️  DB insert failed for: "${r.title}"`)
+        console.error(`[generate] ❌ DB insert failed for: "${r.title}"`)
       }
 
       return row
     })
   )
 
-  // ── Step 4: Build the response payload ───────────────────────────────────
-  // Return the full DB rows (with real UUIDs) merged with AI-only fields
-  // (emoji, difficulty, tips) that we don't store in the DB schema.
-  // The frontend uses row.id directly for /recipe/[id] navigation.
+  // ── STEP 4: Build response with real DB ids ─────────────────────────────────
+  // Every recipe in this response has either:
+  //   - row.id: a real UUID from Supabase → /recipe/[id] WILL resolve
+  //   - crypto.randomUUID(): only if Supabase insert failed (DB error, misconfigured key)
+  //     In this case we flag saved=false so the frontend can show a warning.
 
-  const recipes = generatedRecipes.map((gen, i) => {
-    const row = savedRows[i]
-    const imageUrl = photoResults[i].status === 'fulfilled'
-      ? (photoResults[i] as PromiseFulfilledResult<string | null>).value
-      : null
-
-    return {
-      // Real DB id if save succeeded, otherwise a temp UUID so the UI still renders
-      id: row?.id ?? crypto.randomUUID(),
-      title: gen.title,
-      description: gen.description,
-      time: gen.time,
-      servings: gen.servings,
-      health_score: gen.health_score,
-      calories: gen.calories,
-      protein: gen.protein,
-      carbs: gen.carbs,
-      fat: gen.fat,
-      fiber: gen.fiber,
-      ingredients: gen.ingredients,
-      steps: gen.steps,
-      tags: gen.tags,
-      image_url: row?.image_url ?? imageUrl,
-      // AI-only fields not in DB schema
-      emoji: gen.emoji,
-      difficulty: gen.difficulty,
-      tips: gen.tips,
-      // Flag so frontend knows if it's safe to link to /recipe/[id]
-      saved: row !== null,
-    }
-  })
+  const recipes = generatedRecipes.map((gen, i) => ({
+    id:           savedRows[i]?.id ?? crypto.randomUUID(),
+    title:        gen.title,
+    description:  gen.description,
+    time:         gen.time,
+    servings:     gen.servings,
+    health_score: gen.health_score,
+    calories:     gen.calories,
+    protein:      gen.protein,
+    carbs:        gen.carbs,
+    fat:          gen.fat,
+    fiber:        gen.fiber,
+    ingredients:  gen.ingredients,
+    steps:        gen.steps,
+    tags:         gen.tags,
+    image_url:    imageUrls[i],
+    // AI-only fields (not stored in DB schema)
+    emoji:        gen.emoji,
+    difficulty:   gen.difficulty,
+    tips:         gen.tips,
+    // Tells the frontend whether this ID is safe to navigate to
+    saved:        savedRows[i] !== null,
+  }))
 
   return NextResponse.json({ recipes }, { status: 200 })
 }
