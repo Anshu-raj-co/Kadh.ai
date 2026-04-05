@@ -1,7 +1,7 @@
 # 🍳 Kadh.ai
 
-**An AI-powered culinary assistant that transforms your available ingredients into structured, macro-balanced recipes.**
-
+**Kadh.ai is an AI-powered culinary assistant that converts real-world constraints (ingredients, diet, allergies) into structured, nutritionally optimized recipes.**
+>  Full-stack AI application with real-time recipe generation, nutrition analysis, and persistent storage.
 ---
 
 ## 🚀 Live Demo
@@ -29,7 +29,7 @@ Kadh.ai answers:
 
 This project is designed as a step toward building a truly intelligent, decision-driven cooking assistant.
 
-## 📸 Demo Preview
+## 🎬 Product Demo
 
 ### 🔹 Recipe Generation Flow
 
