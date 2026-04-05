@@ -8,6 +8,7 @@ import { getAllRecipes } from '@/lib/supabase'
 // Prevents Next.js from caching a stale recipe list at build time.
 // Every page visit fetches live data from Supabase.
 export const dynamic = 'force-dynamic'
+export const revalidate = 0
 
 export const metadata = {
   title: 'Browse Recipes — Kadh.ai',
