@@ -40,7 +40,8 @@ onion, tomato, paneer
 ## 📸 Screenshots
 
 ![Home](./public/home.png)
-![Result](./public/result.png)
+![Result](./public/result1.png)
+![Result2](./public/result2.png)
 ![Saved](./public/saved.png)
 
 ---
