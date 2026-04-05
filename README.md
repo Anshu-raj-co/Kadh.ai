@@ -1,36 +1,75 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+Kadh.ai 🍳
+An intelligent, AI-powered culinary assistant that transforms your available ingredients into structured, macro-balanced recipes.
 
-## Getting Started
+📖 Overview
+Kadh.ai was built to solve the daily "what's for dinner" dilemma while minimizing food waste. By inputting available pantry ingredients, dietary restrictions, and allergies, the application leverages the Gemini AI model to dynamically generate diverse, high-quality recipe options.
 
-First, run the development server:
+Note: This project was originally prototyped in Python/Flask and has been completely re-architected into a modern, full-stack Next.js application.
 
-```bash
+✨ Key Features
+Pantry-to-Plate Generation: Input your current ingredients and let AI generate distinct, actionable recipes.
+Strict Dietary Guardrails: Enforces hard constraints for allergies and specific aversions to ensure safe recipe generation.
+Granular Nutritional Data: Automatically calculates realistic serving sizes, caloric density, macros (Protein, Carbs, Fat, Fiber), and a proprietary "Health Score."
+Dynamic Media Integration: Automatically fetches high-resolution, contextually relevant food photography via the Unsplash API based on the generated recipe title.
+Persistent Library: Server-side integration with Supabase allows users to save generated recipes to a community database for future browsing.
+Responsive, Modern UI: Built with Tailwind CSS and Lucide React icons, featuring loading state animations and interactive recipe cards.
+
+🛠️ Technical Stack
+Frontend: Next.js (React), Tailwind CSS, TypeScript
+Backend: Next.js API Routes (Serverless Functions)
+Database: Supabase (PostgreSQL)
+AI Provider: Google Generative AI (Gemini 1.5 Flash)
+Image Provider: Unsplash API
+
+🧠 System Architecture
+Kadh.ai utilizes a strict Client-Server architecture to protect API keys and manage database rate limits.
+Client: The React frontend collects user parameters and orchestrates UI loading states.
+API Route (/api/generate): Intercepts the request, engineers the prompt, and queries the Gemini AI.
+Parallel Processing: Once the text is generated, the server simultaneously fetches imagery from Unsplash and executes a Service_Role insert to Supabase.
+Hydration: The fully formed, database-backed recipe object is returned to the client for immediate, seamless rendering.
+
+🚀 Local Development Setup
+1. Clone the repository
+
+Bash
+git clone https://github.com/Anshu-raj-co/Kadh.ai.git
+cd Kadh.ai
+2. Install dependencies
+
+Bash
+npm install
+3. Configure Environment Variables
+Create a .env.local file in the root directory and add your API keys:
+
+Code snippet
+# Google Gemini API
+GEMINI_API_KEY=your_gemini_api_key_here
+
+# Unsplash API
+UNSPLASH_ACCESS_KEY=your_unsplash_access_key_here
+
+# Supabase (Database)
+NEXT_PUBLIC_SUPABASE_URL=your_supabase_project_url
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
+SUPABASE_SERVICE_ROLE_KEY=your_supabase_service_role_key
+4. Run the development server
+
+Bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+Open http://localhost:3000 to view the application.
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+🗺️ Future Roadmap
+[ ] Implement user authentication (Supabase Auth) for private recipe libraries.
+[ ] Add a "Print Recipe" optimized layout.
+[ ] Integrate a grocery list generator based on missing ingredients.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+👨‍💻 Author
+Anshu Raj
+GitHub
+LinkedIn (https://www.linkedin.com/in/anshu-raj-373349287/)
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
-
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+💡 How to use this:
+Create a file named README.md in the root of your VS Code project.
+Paste this entire text into it.
+Replace the *(Add your link here)* under your name with your actual LinkedIn URL.
+Run git add README.md, git commit -m "Add professional README", and git push to send it to GitHub.
