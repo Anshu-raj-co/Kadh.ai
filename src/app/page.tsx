@@ -12,6 +12,7 @@ import { getAllRecipes } from '@/lib/supabase'
 // each visit re-fetches and re-shuffles without any client JS needed.
 
 export const dynamic = 'force-dynamic'
+export const revalidate = 0
 
 function shuffleArray<T>(arr: T[]): T[] {
   // Fisher-Yates shuffle — runs server-side on every request
