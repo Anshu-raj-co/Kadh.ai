@@ -3,6 +3,11 @@
 import Image from 'next/image'
 import { Clock, Users, Flame, Heart } from 'lucide-react'
 
+// ── Step type — supports both old string[] and new object[] shapes ─────────────
+export type RecipeStep =
+  | string
+  | { instruction: string; timer_minutes?: number; pro_tip?: string }
+
 // ── Types ─────────────────────────────────────────────────────────────────────
 export interface Recipe {
   id: string
@@ -20,10 +25,14 @@ export interface Recipe {
   fiber: number
   tags: string[]
   ingredients: string[]
-  steps: string[]
+  steps: RecipeStep[]       // updated: supports both string[] and object[]
   difficulty?: string
   tips?: string
   category?: string
+  // ── New fields added in schema upgrade ──
+  substitutions?: string[]
+  chef_insight?: string
+  goal?: string
 }
 
 interface RecipeCardProps {
@@ -43,7 +52,7 @@ function getTagClass(tag: string): string {
   return 'bg-cream text-ink-muted'
 }
 
-// ── Health score color helper ─────────────────────────────────────────────────
+// ── Health score color helpers ────────────────────────────────────────────────
 function getHealthColor(score: number): string {
   if (score >= 85) return 'text-sage'
   if (score >= 70) return 'text-saffron'
@@ -91,10 +100,9 @@ export default function RecipeCard({ recipe, onClick }: RecipeCardProps) {
             fill
             className="object-cover"
             sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-            // FIX: If the specific image link is broken, this swaps it for a high-quality placeholder
             onError={(e) => {
-              const target = e.target as HTMLImageElement;
-              target.src = 'https://images.unsplash.com/photo-1495521821757-a1efb6729352?w=800';
+              const target = e.target as HTMLImageElement
+              target.src = 'https://images.unsplash.com/photo-1495521821757-a1efb6729352?w=800'
             }}
           />
         ) : (

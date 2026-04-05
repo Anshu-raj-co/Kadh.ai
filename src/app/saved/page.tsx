@@ -68,8 +68,7 @@ export default async function SavedRecipesPage() {
         </div>
 
         {/* ── Recipe Grid ── */}
-        {/* 
-          Data comes ONLY from Supabase via getAllRecipes().
+        {/* Data comes ONLY from Supabase via getAllRecipes().
           Every card links to /recipe/[recipe.id] where recipe.id is a real
           Supabase UUID — so the detail page will always find the row.
           There is no static array, no mock data, and no client-side state.
@@ -86,23 +85,27 @@ export default async function SavedRecipesPage() {
                   >
                     <RecipeCard
                       recipe={{
-                        id:          recipe.id,
-                        title:       recipe.title,
+                        id: recipe.id,
+                        title: recipe.title,
                         description: recipe.description ?? '',
-                        image_url:   recipe.image_url,
-                        time:        recipe.time,
-                        servings:    recipe.servings,
+                        image_url: recipe.image_url,
+                        time: recipe.time,
+                        servings: recipe.servings,
                         health_score: recipe.health_score,
-                        calories:    recipe.calories,
-                        protein:     recipe.protein,
-                        carbs:       recipe.carbs,
-                        fat:         recipe.fat,
-                        fiber:       recipe.fiber,
-                        tags:        recipe.tags        ?? [],
+                        calories: recipe.calories,
+                        protein: recipe.protein,
+                        carbs: recipe.carbs,
+                        fat: recipe.fat,
+                        fiber: recipe.fiber,
+                        tags: recipe.tags ?? [],
                         ingredients: recipe.ingredients ?? [],
-                        steps:       recipe.steps       ?? [],
-                        difficulty:  recipe.difficulty,
-                        tips:        recipe.tips,
+                        steps: Array.isArray(recipe.steps) ? recipe.steps : [], // Updated to handle new arrays safely
+                        difficulty: recipe.difficulty,
+                        tips: recipe.tips,
+                        // New fields added to prevent missing data errors
+                        substitutions: recipe.substitutions ?? [],
+                        chef_insight: recipe.chef_insight ?? '',
+                        goal: recipe.goal ?? 'Balanced',
                       }}
                     />
                   </Link>

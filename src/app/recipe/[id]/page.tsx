@@ -9,8 +9,17 @@ import Navbar from '@/components/Navbar'
 import NutritionPanel from '@/components/NutritionPanel'
 import { getRecipeById } from '@/lib/supabase'
 
-export async function generateMetadata({ params }: { params: { id: string } }) {
-  const recipe = await getRecipeById(params.id)
+// ── Prevent stale cached renders from before the DB re-seed ──────────────────
+export const dynamic = 'force-dynamic'
+
+// ── Dynamic metadata ──────────────────────────────────────────────────────────
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ id: string }>  // Next.js 14 App Router: params is a Promise
+}) {
+  const { id } = await params       // must await before use
+  const recipe = await getRecipeById(id)
   if (!recipe) return { title: 'Recipe not found — Kadh.ai' }
   return {
     title: `${recipe.title} — Kadh.ai`,
@@ -18,24 +27,31 @@ export async function generateMetadata({ params }: { params: { id: string } }) {
   }
 }
 
-// Type for the new professional step structure
+// ── Type for the new professional step structure ──────────────────────────────
 type RecipeStep =
   | string
   | { instruction: string; timer_minutes?: number; pro_tip?: string }
 
-export default async function RecipeDetailPage({ params }: { params: { id: string } }) {
-  const recipe = await getRecipeById(params.id)
+// ── Page ──────────────────────────────────────────────────────────────────────
+export default async function RecipeDetailPage({
+  params,
+}: {
+  params: Promise<{ id: string }>  // Next.js 14 App Router: params is a Promise
+}) {
+  const { id } = await params       // must await — reading params.id synchronously returns undefined
+
+  const recipe = await getRecipeById(id)
   if (!recipe) notFound()
 
   const healthColor =
     recipe.health_score >= 85 ? 'text-sage'
-      : recipe.health_score >= 70 ? 'text-saffron'
-        : 'text-rose'
+    : recipe.health_score >= 70 ? 'text-saffron'
+    : 'text-rose'
 
   const difficultyColor =
-    recipe.difficulty === 'Easy' ? 'bg-sage-light text-sage'
-      : recipe.difficulty === 'Hard' ? 'bg-rose-light text-rose'
-        : 'bg-saffron-light text-saffron-deep'
+    recipe.difficulty === 'Easy'   ? 'bg-sage-light text-sage'
+    : recipe.difficulty === 'Hard' ? 'bg-rose-light text-rose'
+    : 'bg-saffron-light text-saffron-deep'
 
   // Normalise steps — handles both old (string[]) and new (object[]) shapes
   const steps: RecipeStep[] = recipe.steps ?? []
@@ -50,6 +66,7 @@ export default async function RecipeDetailPage({ params }: { params: { id: strin
         <section className="bg-saffron-light border-b border-border">
           <div className="max-w-5xl mx-auto px-6 py-10 md:py-14">
 
+            {/* Breadcrumb */}
             <Link
               href="/"
               className="inline-flex items-center gap-1.5 text-sm text-ink-muted hover:text-saffron transition-colors mb-6"
@@ -59,11 +76,16 @@ export default async function RecipeDetailPage({ params }: { params: { id: strin
             </Link>
 
             <div className="grid md:grid-cols-[1fr_280px] gap-10 items-center">
+              {/* Text */}
               <div>
+                {/* Tags */}
                 {recipe.tags?.length > 0 && (
                   <div className="flex flex-wrap gap-2 mb-4">
                     {recipe.tags.map((tag: string) => (
-                      <span key={tag} className="text-[0.7rem] font-semibold uppercase tracking-[0.05em] px-2.5 py-0.5 rounded-full bg-white border border-border text-ink-muted">
+                      <span
+                        key={tag}
+                        className="text-[0.7rem] font-semibold uppercase tracking-[0.05em] px-2.5 py-0.5 rounded-full bg-white border border-border text-ink-muted"
+                      >
                         {tag}
                       </span>
                     ))}
@@ -78,6 +100,7 @@ export default async function RecipeDetailPage({ params }: { params: { id: strin
                   {recipe.description}
                 </p>
 
+                {/* Meta pills */}
                 <div className="flex flex-wrap gap-3">
                   <MetaPill icon={<Clock className="w-3.5 h-3.5" />} label={recipe.time} />
                   <MetaPill icon={<Users className="w-3.5 h-3.5" />} label={`${recipe.servings} servings`} />
@@ -94,6 +117,7 @@ export default async function RecipeDetailPage({ params }: { params: { id: strin
                 </div>
               </div>
 
+              {/* Image / emoji */}
               <div className="relative h-60 md:h-64 rounded-card overflow-hidden border border-border shadow-card-lg bg-white flex items-center justify-center">
                 {recipe.image_url ? (
                   <Image
@@ -122,7 +146,7 @@ export default async function RecipeDetailPage({ params }: { params: { id: strin
                 <Sparkles className="w-5 h-5 text-white" />
               </div>
               <div>
-                <h3 className="font-display text-base font-bold text-ink mb-1 flex items-center gap-2">
+                <h3 className="font-display text-base font-bold text-ink mb-1">
                   Chef's Insight
                 </h3>
                 <p className="text-ink-muted text-sm leading-relaxed">{recipe.chef_insight}</p>
@@ -135,12 +159,14 @@ export default async function RecipeDetailPage({ params }: { params: { id: strin
         <section className="max-w-5xl mx-auto px-6 py-10">
           <div className="grid md:grid-cols-[1fr_300px] gap-10">
 
-            {/* ── Left column ── */}
+            {/* ── Left column — Ingredients + Steps ── */}
             <div>
 
               {/* Ingredients */}
               <div className="mb-10">
-                <h2 className="font-display text-2xl font-bold text-ink mb-5">Ingredients</h2>
+                <h2 className="font-display text-2xl font-bold text-ink mb-5">
+                  Ingredients
+                </h2>
                 <ul className="divide-y divide-border">
                   {recipe.ingredients?.map((ingredient: string, i: number) => (
                     <li key={i} className="flex items-center gap-3 py-3">
@@ -159,7 +185,7 @@ export default async function RecipeDetailPage({ params }: { params: { id: strin
                     Smart Substitutions
                   </h2>
                   <ul className="space-y-3">
-                    {recipe.substitutions?.map((sub: string, i: number) => (
+                    {recipe.substitutions.map((sub: string, i: number) => (
                       <li key={i} className="flex items-start gap-3 bg-white border border-border rounded-card px-4 py-3">
                         <span className="flex-shrink-0 w-5 h-5 rounded-full bg-saffron-light text-saffron flex items-center justify-center text-xs font-bold mt-0.5">
                           ↔
@@ -173,13 +199,15 @@ export default async function RecipeDetailPage({ params }: { params: { id: strin
 
               {/* Professional Steps */}
               <div className="mb-10">
-                <h2 className="font-display text-2xl font-bold text-ink mb-5">How to Cook</h2>
+                <h2 className="font-display text-2xl font-bold text-ink mb-5">
+                  How to Cook
+                </h2>
                 <ol className="space-y-6">
                   {steps.map((step, i) => {
                     // Support both old string steps and new object steps
                     const instruction = typeof step === 'string' ? step : step.instruction
-                    const timer = typeof step === 'object' ? step.timer_minutes : undefined
-                    const proTip = typeof step === 'object' ? step.pro_tip : undefined
+                    const timer       = typeof step === 'object' ? step.timer_minutes : undefined
+                    const proTip      = typeof step === 'object' ? step.pro_tip       : undefined
 
                     return (
                       <li key={i} className="flex gap-4">
@@ -194,15 +222,15 @@ export default async function RecipeDetailPage({ params }: { params: { id: strin
                             {instruction}
                           </p>
 
-                          <div className="flex flex-wrap gap-2">
-                            {/* Timer badge */}
-                            {timer && (
+                          {/* Timer badge */}
+                          {timer && (
+                            <div className="flex flex-wrap gap-2 mb-3">
                               <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-saffron-light text-saffron-deep border border-[#f0d5a0]">
                                 <Timer className="w-3 h-3" />
                                 {timer} min
                               </span>
-                            )}
-                          </div>
+                            </div>
+                          )}
 
                           {/* Per-step pro tip */}
                           {proTip && (
@@ -231,7 +259,7 @@ export default async function RecipeDetailPage({ params }: { params: { id: strin
 
             </div>
 
-            {/* ── Right column — Nutrition ── */}
+            {/* ── Right column — Nutrition panel ── */}
             <div>
               <NutritionPanel
                 health_score={recipe.health_score}
@@ -242,13 +270,20 @@ export default async function RecipeDetailPage({ params }: { params: { id: strin
                 fiber={recipe.fiber}
               />
 
+              {/* CTA below panel */}
               <div className="mt-4 bg-white rounded-card border border-border shadow-card p-5 text-center">
                 <p className="text-sm text-ink-muted mb-3 leading-relaxed">
                   Want more recipes from your pantry?
                 </p>
                 <Link
                   href="/find"
-                  className="inline-flex items-center gap-2 bg-saffron hover:bg-saffron-deep text-white px-5 py-2.5 rounded-full font-semibold text-sm transition-colors duration-200"
+                  className="
+                    inline-flex items-center gap-2
+                    bg-saffron hover:bg-saffron-deep text-white
+                    px-5 py-2.5 rounded-full
+                    font-semibold text-sm
+                    transition-colors duration-200
+                  "
                 >
                   Try the AI Finder
                 </Link>
@@ -263,6 +298,7 @@ export default async function RecipeDetailPage({ params }: { params: { id: strin
   )
 }
 
+// ── MetaPill helper ───────────────────────────────────────────────────────────
 function MetaPill({ icon, label }: { icon: React.ReactNode; label: string }) {
   return (
     <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold bg-white border border-border text-ink-muted">
