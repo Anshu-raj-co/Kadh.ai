@@ -11,7 +11,7 @@ import { getAllRecipes } from '@/lib/supabase'
 // server components are dynamic by default when they read from a data source,
 // each visit re-fetches and re-shuffles without any client JS needed.
 
-export const dynamic = 'force-dynamic';
+export const dynamic = 'force-dynamic'
 
 function shuffleArray<T>(arr: T[]): T[] {
   // Fisher-Yates shuffle — runs server-side on every request
