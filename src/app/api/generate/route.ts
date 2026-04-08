@@ -10,41 +10,41 @@ export type UserGoal = 'Balanced' | 'Bulking' | 'Cutting' | 'Budget'
 
 interface GenerateRequestBody {
   ingredients: string[]
-  allergies:   string[]
-  avoids:      string[]
-  prefs:       string[]
-  count?:      number
-  goal?:       UserGoal   // ← new
+  allergies: string[]
+  avoids: string[]
+  prefs: string[]
+  count?: number
+  goal?: UserGoal   // ← new
 }
 
 // Enhancement 3: chef_insight field
 // Enhancement 2: substitutions array
 // Enhancement 4: steps changed from string[] to RecipeStep[]
 export interface RecipeStep {
-  instruction:    string         // The clear cooking action
-  timer_minutes:  number | null  // null when step has no specific wait time
-  pro_tip:        string         // Chef-level tip specific to this step
+  instruction: string         // The clear cooking action
+  timer_minutes: number | null  // null when step has no specific wait time
+  pro_tip: string         // Chef-level tip specific to this step
 }
 
 export interface GeneratedRecipe {
-  title:          string
-  description:    string
-  time:           string
-  servings:       number
-  health_score:   number
-  calories:       number
-  protein:        number
-  carbs:          number
-  fat:            number
-  fiber:          number
-  ingredients:    string[]
-  steps:          RecipeStep[]    // ← upgraded from string[]
-  tags:           string[]
-  difficulty:     string
-  tips:           string          // overall chef tip (kept for backwards compat)
-  emoji:          string
-  substitutions:  string[]        // ← new: 2-3 smart ingredient swaps
-  chef_insight:   string          // ← new: why this recipe fits the chosen goal
+  title: string
+  description: string
+  time: string
+  servings: number
+  health_score: number
+  calories: number
+  protein: number
+  carbs: number
+  fat: number
+  fiber: number
+  ingredients: string[]
+  steps: RecipeStep[]    // ← upgraded from string[]
+  tags: string[]
+  difficulty: string
+  tips: string          // overall chef tip (kept for backwards compat)
+  emoji: string
+  substitutions: string[]        // ← new: 2-3 smart ingredient swaps
+  chef_insight: string          // ← new: why this recipe fits the chosen goal
 }
 
 // ── Goal configuration ────────────────────────────────────────────────────────
@@ -52,34 +52,34 @@ export interface GeneratedRecipe {
 // direction injected directly into the Gemini prompt.
 
 const GOAL_CONFIGS: Record<UserGoal, {
-  label:       string
+  label: string
   description: string
-  emoji:       string
-  direction:   string   // injected into the user prompt
+  emoji: string
+  direction: string   // injected into the user prompt
 }> = {
   Balanced: {
-    label:       'Balanced',
-    emoji:       '⚖️',
+    label: 'Balanced',
+    emoji: '⚖️',
     description: 'Well-rounded macros for everyday health',
-    direction:   'Optimise for balanced macronutrients. Aim for a roughly equal caloric split between protein, carbohydrates, and healthy fats. Prioritise whole foods and high micronutrient density.',
+    direction: 'Optimise for balanced macronutrients. Aim for a roughly equal caloric split between protein, carbohydrates, and healthy fats. Prioritise whole foods and high micronutrient density.',
   },
   Bulking: {
-    label:       'Bulking',
-    emoji:       '💪',
+    label: 'Bulking',
+    emoji: '💪',
     description: 'Higher protein & calories for muscle gain',
-    direction:   'Optimise for muscle hypertrophy. Target minimum 35g protein per serving. Calories should be 20-30% above a standard 500 kcal baseline. Include complex carbohydrates for glycogen replenishment. Every chef_insight must explain how this recipe supports anabolic muscle growth.',
+    direction: 'Optimise for muscle hypertrophy. Target minimum 35g protein per serving. Calories should be 20-30% above a standard 500 kcal baseline. Include complex carbohydrates for glycogen replenishment. Every chef_insight must explain how this recipe supports anabolic muscle growth.',
   },
   Cutting: {
-    label:       'Cutting',
-    emoji:       '🔥',
+    label: 'Cutting',
+    emoji: '🔥',
     description: 'High volume, low calorie for fat loss',
-    direction:   'Optimise for fat loss while preserving lean muscle. Target under 400 kcal per serving with minimum 25g protein. Maximise dietary fibre (aim for 8g+) and water content to promote satiety. Minimise refined carbohydrates and saturated fat. Every chef_insight must explain how this recipe creates a calorie deficit without sacrificing satiety.',
+    direction: 'Optimise for fat loss while preserving lean muscle. Target under 400 kcal per serving with minimum 25g protein. Maximise dietary fibre (aim for 8g+) and water content to promote satiety. Minimise refined carbohydrates and saturated fat. Every chef_insight must explain how this recipe creates a calorie deficit without sacrificing satiety.',
   },
   Budget: {
-    label:       'Budget',
-    emoji:       '💰',
+    label: 'Budget',
+    emoji: '💰',
     description: 'Nutritious meals from affordable staples',
-    direction:   'Optimise for maximum nutritional value per unit of cost. Prioritise affordable pantry staples: lentils, eggs, beans, oats, cabbage, carrots, canned tomatoes, rice, and pasta. Avoid expensive proteins like premium cuts, fresh seafood, or exotic spices. Every chef_insight must explain how this recipe delivers strong nutrition at low cost.',
+    direction: 'Optimise for maximum nutritional value per unit of cost. Prioritise affordable pantry staples: lentils, eggs, beans, oats, cabbage, carrots, canned tomatoes, rice, and pasta. Avoid expensive proteins like premium cuts, fresh seafood, or exotic spices. Every chef_insight must explain how this recipe delivers strong nutrition at low cost.',
   },
 }
 
@@ -92,15 +92,15 @@ const STEP_SCHEMA = {
   type: SchemaType.OBJECT,
   properties: {
     instruction: {
-      type:        SchemaType.STRING,
+      type: SchemaType.STRING,
       description: 'One single, clear, actionable cooking instruction using professional culinary terminology',
     },
     timer_minutes: {
-      type:        SchemaType.NUMBER,
+      type: SchemaType.NUMBER,
       description: 'Exact time in minutes for this step if it involves waiting, cooking, resting, or marinating. Use 0 if the step is instantaneous hands-on work with no waiting.',
     },
     pro_tip: {
-      type:        SchemaType.STRING,
+      type: SchemaType.STRING,
       description: 'A precise, chef-level professional tip specific to this exact step that meaningfully improves the outcome. Reference specific techniques, temperatures, or sensory cues.',
     },
   },
@@ -111,80 +111,80 @@ const SINGLE_RECIPE_SCHEMA = {
   type: SchemaType.OBJECT,
   properties: {
     title: {
-      type:        SchemaType.STRING,
+      type: SchemaType.STRING,
       description: 'Appetizing recipe name using professional culinary language',
     },
     description: {
-      type:        SchemaType.STRING,
+      type: SchemaType.STRING,
       description: 'Two-sentence description using evocative, restaurant-menu-quality language',
     },
     time: {
-      type:        SchemaType.STRING,
+      type: SchemaType.STRING,
       description: 'Total cook + prep time e.g. "35 min" or "1 hr 10 min"',
     },
     servings: {
-      type:        SchemaType.INTEGER,
+      type: SchemaType.INTEGER,
       description: 'Number of servings',
     },
     health_score: {
-      type:        SchemaType.INTEGER,
+      type: SchemaType.INTEGER,
       description: 'Nutritional quality score 0-100 based on micronutrient density, fibre, healthy fat profile, and macro balance relative to the chosen goal',
     },
     calories: {
-      type:        SchemaType.INTEGER,
+      type: SchemaType.INTEGER,
       description: 'Calories per serving (kcal) — must be calculated realistically from ingredient quantities using standard nutritional databases',
     },
     protein: {
-      type:        SchemaType.INTEGER,
+      type: SchemaType.INTEGER,
       description: 'Protein per serving in grams — must be realistic based on actual ingredient quantities',
     },
     carbs: {
-      type:        SchemaType.INTEGER,
+      type: SchemaType.INTEGER,
       description: 'Total carbohydrates per serving in grams',
     },
     fat: {
-      type:        SchemaType.INTEGER,
+      type: SchemaType.INTEGER,
       description: 'Total fat per serving in grams',
     },
     fiber: {
-      type:        SchemaType.INTEGER,
+      type: SchemaType.INTEGER,
       description: 'Dietary fibre per serving in grams',
     },
     ingredients: {
-      type:        SchemaType.ARRAY,
-      items:       { type: SchemaType.STRING },
+      type: SchemaType.ARRAY,
+      items: { type: SchemaType.STRING },
       description: 'Each ingredient listed as "precise quantity + unit + ingredient name" e.g. "200g boneless chicken thighs" or "2 tbsp extra-virgin olive oil"',
     },
     steps: {
-      type:        SchemaType.ARRAY,
-      items:       STEP_SCHEMA,
+      type: SchemaType.ARRAY,
+      items: STEP_SCHEMA,
       description: 'Ordered cooking instructions as professional step objects. Each must have instruction, timer_minutes, and pro_tip.',
     },
     tags: {
-      type:        SchemaType.ARRAY,
-      items:       { type: SchemaType.STRING },
+      type: SchemaType.ARRAY,
+      items: { type: SchemaType.STRING },
       description: 'Up to 4 descriptive tags e.g. ["High Protein", "Indian", "Meal Prep", "Gluten-Free"]',
     },
     difficulty: {
-      type:        SchemaType.STRING,
-      enum:        ['Easy', 'Medium', 'Hard'],
+      type: SchemaType.STRING,
+      enum: ['Easy', 'Medium', 'Hard'],
       description: 'Honest culinary difficulty level',
     },
     tips: {
-      type:        SchemaType.STRING,
+      type: SchemaType.STRING,
       description: 'One overarching chef-level tip for the whole dish — a technique or insight that elevates the recipe from good to exceptional',
     },
     emoji: {
-      type:        SchemaType.STRING,
+      type: SchemaType.STRING,
       description: 'Single most representative emoji for the dish',
     },
     substitutions: {
-      type:        SchemaType.ARRAY,
-      items:       { type: SchemaType.STRING },
+      type: SchemaType.ARRAY,
+      items: { type: SchemaType.STRING },
       description: 'Exactly 2-3 smart, practical ingredient substitutions in the format: "Replace [ingredient] with [alternative] to [specific benefit]". e.g. "Replace cream with full-fat Greek yogurt to reduce saturated fat by ~60% while keeping creaminess."',
     },
     chef_insight: {
-      type:        SchemaType.STRING,
+      type: SchemaType.STRING,
       description: 'One precise sentence explaining exactly why this recipe is ideal for the user\'s stated goal (Balanced / Bulking / Cutting / Budget). Reference specific macros, ingredients, or cooking methods. This must be goal-specific, not generic.',
     },
   },
@@ -197,7 +197,7 @@ const SINGLE_RECIPE_SCHEMA = {
 }
 
 const RECIPES_ARRAY_SCHEMA = {
-  type:  SchemaType.ARRAY,
+  type: SchemaType.ARRAY,
   items: SINGLE_RECIPE_SCHEMA,
 }
 
@@ -242,8 +242,8 @@ function buildUserPrompt(body: GenerateRequestBody): string {
   ]
 
   if (allergies.length) lines.push(`Allergies — NEVER include these under any circumstances: ${allergies.join(', ')}`)
-  if (avoids.length)    lines.push(`Disliked or unavailable ingredients: ${avoids.join(', ')}`)
-  if (prefs.length)     lines.push(`Dietary preferences: ${prefs.join(', ')}`)
+  if (avoids.length) lines.push(`Disliked or unavailable ingredients: ${avoids.join(', ')}`)
+  if (prefs.length) lines.push(`Dietary preferences: ${prefs.join(', ')}`)
 
   lines.push(``)
   lines.push(`Each recipe's chef_insight must specifically reference the ${goal} goal with concrete nutritional figures.`)
@@ -261,9 +261,9 @@ function validateBody(body: unknown): body is GenerateRequestBody {
   if (!body || typeof body !== 'object') return false
   const b = body as Record<string, unknown>
   if (!Array.isArray(b.ingredients) || b.ingredients.length === 0) return false
-  if (!Array.isArray(b.allergies))  return false
-  if (!Array.isArray(b.avoids))     return false
-  if (!Array.isArray(b.prefs))      return false
+  if (!Array.isArray(b.allergies)) return false
+  if (!Array.isArray(b.avoids)) return false
+  if (!Array.isArray(b.prefs)) return false
   // goal is optional — defaults to 'Balanced' in buildUserPrompt
   if (b.goal !== undefined && !VALID_GOALS.includes(b.goal as UserGoal)) return false
   return true
@@ -295,7 +295,7 @@ async function fetchUnsplashPhoto(recipeTitle: string): Promise<string> {
 
   try {
     const cleanTitle = recipeTitle.replace(/\p{Emoji}/gu, '').replace(/[^\w\s]/g, '').trim()
-    const query      = `${cleanTitle} food dish`
+    const query = `${cleanTitle} food dish`
 
     const url = new URL('https://api.unsplash.com/search/photos')
     url.searchParams.set('query', query)
@@ -356,14 +356,14 @@ export async function POST(req: NextRequest) {
     const genAI = new GoogleGenerativeAI(apiKey)
 
     const model = genAI.getGenerativeModel({
-      model: 'gemini-2.5-flash',
+      model: 'gemini-2.5-flash-lite',
       systemInstruction: SYSTEM_PROMPT,
       generationConfig: {
         responseMimeType: 'application/json',
-        responseSchema:   RECIPES_ARRAY_SCHEMA as never,
-        temperature:      0.85,   // Slightly lower than before — more consistent with professional schemas
-        topP:             0.95,
-        maxOutputTokens:  16384,  // Steps-as-objects are verbose — need more token budget
+        responseSchema: RECIPES_ARRAY_SCHEMA as never,
+        temperature: 0.85,   // Slightly lower than before — more consistent with professional schemas
+        topP: 0.95,
+        maxOutputTokens: 16384,  // Steps-as-objects are verbose — need more token budget
       },
     })
 
@@ -423,26 +423,26 @@ export async function POST(req: NextRequest) {
   const savedRows: (RecipeRow | null)[] = await Promise.all(
     generatedRecipes.map(async (r, i) => {
       const row = await insertRecipe({
-        title:        r.title,
-        description:  r.description,
-        time:         r.time,
-        servings:     r.servings,
+        title: r.title,
+        description: r.description,
+        time: r.time,
+        servings: r.servings,
         health_score: r.health_score,
-        calories:     r.calories,
-        protein:      r.protein,
-        carbs:        r.carbs,
-        fat:          r.fat,
-        fiber:        r.fiber,
-        ingredients:  r.ingredients,
+        calories: r.calories,
+        protein: r.protein,
+        carbs: r.carbs,
+        fat: r.fat,
+        fiber: r.fiber,
+        ingredients: r.ingredients,
         // steps is JSONB in Supabase — accepts the object array directly
-        steps:        r.steps as unknown as string[],
-        tags:         r.tags,
-        image_url:    imageUrls[i],
+        steps: r.steps as unknown as string[],
+        tags: r.tags,
+        image_url: imageUrls[i],
         // New columns — TypeScript cast needed until you update RecipeRow interface
         ...({ substitutions: r.substitutions } as object),
-        ...({ chef_insight:  r.chef_insight  } as object),
-        ...({ goal:          body.goal ?? 'Balanced' } as object),
-        ...({ difficulty:    r.difficulty    } as object),
+        ...({ chef_insight: r.chef_insight } as object),
+        ...({ goal: body.goal ?? 'Balanced' } as object),
+        ...({ difficulty: r.difficulty } as object),
       } as Parameters<typeof insertRecipe>[0])
 
       if (row) {
@@ -458,28 +458,28 @@ export async function POST(req: NextRequest) {
   // ── STEP 4: Build response ───────────────────────────────────────────────────
 
   const recipes = generatedRecipes.map((gen, i) => ({
-    id:            savedRows[i]?.id ?? crypto.randomUUID(),
-    title:         gen.title,
-    description:   gen.description,
-    time:          gen.time,
-    servings:      gen.servings,
-    health_score:  gen.health_score,
-    calories:      gen.calories,
-    protein:       gen.protein,
-    carbs:         gen.carbs,
-    fat:           gen.fat,
-    fiber:         gen.fiber,
-    ingredients:   gen.ingredients,
-    steps:         gen.steps,
-    tags:          gen.tags,
-    image_url:     imageUrls[i],
-    emoji:         gen.emoji,
-    difficulty:    gen.difficulty,
-    tips:          gen.tips,
+    id: savedRows[i]?.id ?? crypto.randomUUID(),
+    title: gen.title,
+    description: gen.description,
+    time: gen.time,
+    servings: gen.servings,
+    health_score: gen.health_score,
+    calories: gen.calories,
+    protein: gen.protein,
+    carbs: gen.carbs,
+    fat: gen.fat,
+    fiber: gen.fiber,
+    ingredients: gen.ingredients,
+    steps: gen.steps,
+    tags: gen.tags,
+    image_url: imageUrls[i],
+    emoji: gen.emoji,
+    difficulty: gen.difficulty,
+    tips: gen.tips,
     substitutions: gen.substitutions,
-    chef_insight:  gen.chef_insight,
-    goal:          body.goal ?? 'Balanced',
-    saved:         savedRows[i] !== null,
+    chef_insight: gen.chef_insight,
+    goal: body.goal ?? 'Balanced',
+    saved: savedRows[i] !== null,
   }))
 
   return NextResponse.json({ recipes }, { status: 200 })
