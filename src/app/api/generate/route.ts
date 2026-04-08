@@ -5,7 +5,6 @@ import type { RecipeRow } from '@/lib/supabase'
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
-// Enhancement 1: Goal field added to request body
 export type UserGoal = 'Balanced' | 'Bulking' | 'Cutting' | 'Budget'
 
 interface GenerateRequestBody {
@@ -14,16 +13,13 @@ interface GenerateRequestBody {
   avoids: string[]
   prefs: string[]
   count?: number
-  goal?: UserGoal   // ← new
+  goal?: UserGoal
 }
 
-// Enhancement 3: chef_insight field
-// Enhancement 2: substitutions array
-// Enhancement 4: steps changed from string[] to RecipeStep[]
 export interface RecipeStep {
-  instruction: string         // The clear cooking action
-  timer_minutes: number | null  // null when step has no specific wait time
-  pro_tip: string         // Chef-level tip specific to this step
+  instruction: string
+  timer_minutes: number | null
+  pro_tip: string
 }
 
 export interface GeneratedRecipe {
@@ -38,24 +34,22 @@ export interface GeneratedRecipe {
   fat: number
   fiber: number
   ingredients: string[]
-  steps: RecipeStep[]    // ← upgraded from string[]
+  steps: RecipeStep[]
   tags: string[]
   difficulty: string
-  tips: string          // overall chef tip (kept for backwards compat)
+  tips: string
   emoji: string
-  substitutions: string[]        // ← new: 2-3 smart ingredient swaps
-  chef_insight: string          // ← new: why this recipe fits the chosen goal
+  substitutions: string[]
+  chef_insight: string
 }
 
 // ── Goal configuration ────────────────────────────────────────────────────────
-// Each goal has a label, a description for the UI, and precise nutritional
-// direction injected directly into the Gemini prompt.
 
 const GOAL_CONFIGS: Record<UserGoal, {
   label: string
   description: string
   emoji: string
-  direction: string   // injected into the user prompt
+  direction: string
 }> = {
   Balanced: {
     label: 'Balanced',
@@ -84,9 +78,6 @@ const GOAL_CONFIGS: Record<UserGoal, {
 }
 
 // ── Gemini Schema ─────────────────────────────────────────────────────────────
-// Enhancement 4: steps is now an array of objects, not strings.
-// Enhancement 2: substitutions array added.
-// Enhancement 3: chef_insight string added.
 
 const STEP_SCHEMA = {
   type: SchemaType.OBJECT,
@@ -181,11 +172,11 @@ const SINGLE_RECIPE_SCHEMA = {
     substitutions: {
       type: SchemaType.ARRAY,
       items: { type: SchemaType.STRING },
-      description: 'Exactly 2-3 smart, practical ingredient substitutions in the format: "Replace [ingredient] with [alternative] to [specific benefit]". e.g. "Replace cream with full-fat Greek yogurt to reduce saturated fat by ~60% while keeping creaminess."',
+      description: 'Exactly 2-3 smart, practical ingredient substitutions in the format: "Replace [ingredient] with [alternative] to [specific benefit]".',
     },
     chef_insight: {
       type: SchemaType.STRING,
-      description: 'One precise sentence explaining exactly why this recipe is ideal for the user\'s stated goal (Balanced / Bulking / Cutting / Budget). Reference specific macros, ingredients, or cooking methods. This must be goal-specific, not generic.',
+      description: "One precise sentence explaining exactly why this recipe is ideal for the user's stated goal (Balanced / Bulking / Cutting / Budget). Reference specific macros, ingredients, or cooking methods.",
     },
   },
   required: [
@@ -201,7 +192,7 @@ const RECIPES_ARRAY_SCHEMA = {
   items: SINGLE_RECIPE_SCHEMA,
 }
 
-// ── System Prompt — Enhancement 5: Professional culinary standard ─────────────
+// ── System Prompt ─────────────────────────────────────────────────────────────
 
 const SYSTEM_PROMPT = `You are Kadh.ai — a professional culinary AI trained to the standard of a Michelin-starred chef with a degree in sports nutrition and dietetics.
 
@@ -264,7 +255,6 @@ function validateBody(body: unknown): body is GenerateRequestBody {
   if (!Array.isArray(b.allergies)) return false
   if (!Array.isArray(b.avoids)) return false
   if (!Array.isArray(b.prefs)) return false
-  // goal is optional — defaults to 'Balanced' in buildUserPrompt
   if (b.goal !== undefined && !VALID_GOALS.includes(b.goal as UserGoal)) return false
   return true
 }
@@ -322,6 +312,208 @@ async function fetchUnsplashPhoto(recipeTitle: string): Promise<string> {
   }
 }
 
+// ── Model discovery & caching ─────────────────────────────────────────────────
+//
+// On first request (or after 5 min TTL), fetches the live /v1beta/models list
+// from Google, filters to models that support generateContent, then sorts them
+// by our preferred order. Subsequent requests within 5 min use the cached list.
+
+const PREFERRED_MODEL_NAMES = [
+  'gemini-2.5-flash',   // best quality, tried first
+  'gemini-2.0-flash',   // strong fallback, still in official docs
+  'gemini-1.5-flash',   // older but very stable
+]
+
+interface ModelCache {
+  models: string[]   // normalized, e.g. ["gemini-2.5-flash", "gemini-2.0-flash", ...]
+  fetchedAt: number  // Date.now()
+}
+
+// Module-level cache — persists across requests within the same serverless instance
+let modelCache: ModelCache | null = null
+const MODEL_CACHE_TTL_MS = 5 * 60 * 1000  // 5 minutes
+
+interface GeminiModelEntry {
+  name: string                           // "models/gemini-2.0-flash"
+  supportedGenerationMethods?: string[]  // ["generateContent", "countTokens", ...]
+}
+
+async function fetchAvailableGeminiModels(apiKey: string): Promise<string[]> {
+  const url = `https://generativelanguage.googleapis.com/v1beta/models?key=${apiKey}`
+
+  let res: Response
+  try {
+    res = await fetch(url, { cache: 'no-store' })
+  } catch (err) {
+    console.warn('[generate] Network error fetching model list, using hardcoded fallback:', err)
+    return [...PREFERRED_MODEL_NAMES]
+  }
+
+  if (!res.ok) {
+    console.warn(`[generate] Model list endpoint returned ${res.status}, using hardcoded fallback`)
+    return [...PREFERRED_MODEL_NAMES]
+  }
+
+  const data = await res.json() as { models?: GeminiModelEntry[] }
+  const allModels: GeminiModelEntry[] = data.models ?? []
+
+  console.log('[generate] discovered models:', allModels.map(m => m.name))
+
+  // Normalize "models/gemini-x" → "gemini-x" and keep only generateContent-capable ones
+  const capable = allModels
+    .filter(m =>
+      !m.supportedGenerationMethods ||
+      m.supportedGenerationMethods.includes('generateContent')
+    )
+    .map(m => m.name.replace(/^models\//, ''))
+    .filter(name => name.startsWith('gemini-'))
+
+  return capable
+}
+
+function pickPreferredModels(availableModels: string[]): string[] {
+  const available = new Set(availableModels)
+
+  // Preferred models that actually exist in the live list, in priority order
+  const ordered: string[] = PREFERRED_MODEL_NAMES.filter(name => available.has(name))
+
+  // Append any remaining discovered models as additional fallbacks
+  for (const name of availableModels) {
+    if (!ordered.includes(name)) ordered.push(name)
+  }
+
+  // If the live list returned nothing useful, fall back to hardcoded names
+  if (ordered.length === 0) return [...PREFERRED_MODEL_NAMES]
+
+  return ordered
+}
+
+async function getModelList(apiKey: string): Promise<string[]> {
+  const now = Date.now()
+
+  if (modelCache && now - modelCache.fetchedAt < MODEL_CACHE_TTL_MS) {
+    return modelCache.models
+  }
+
+  const discovered = await fetchAvailableGeminiModels(apiKey)
+  const preferred = pickPreferredModels(discovered)
+
+  console.log('[generate] preferred available models:', preferred)
+
+  modelCache = { models: preferred, fetchedAt: now }
+  return preferred
+}
+
+// ── Retry & error helpers ─────────────────────────────────────────────────────
+
+function sleep(ms: number): Promise<void> {
+  return new Promise(resolve => setTimeout(resolve, ms))
+}
+
+function isRetryableGeminiError(message: string): boolean {
+  return (
+    message.includes('503') ||
+    message.includes('Service Unavailable') ||
+    message.includes('overload') ||
+    message.includes('high demand') ||
+    message.includes('429') ||
+    message.includes('quota') ||
+    message.includes('RESOURCE_EXHAUSTED') ||
+    message.includes('rate limit')
+  )
+}
+
+function isAuthError(message: string): boolean {
+  return (
+    message.includes('401') ||
+    message.includes('403') ||
+    message.includes('API_KEY') ||
+    message.includes('PERMISSION_DENIED') ||
+    message.includes('API key not valid')
+  )
+}
+
+// ── Core generation with discovered model list + per-model exponential backoff ─
+//
+// Flow per model:
+//   attempt 0  → try immediately
+//   attempt 1  → wait 800ms,  retry (retriable errors only)
+//   attempt 2  → wait 1600ms, retry (retriable errors only)
+//   give up    → move to next discovered model
+//
+// Auth errors stop everything immediately (no point retrying or switching models).
+
+const MAX_RETRIES_PER_MODEL = 2
+const BASE_BACKOFF_MS = 800
+
+async function generateWithDiscoveredModels(
+  genAI: GoogleGenerativeAI,
+  prompt: string,
+  apiKey: string
+): Promise<{ text: string; modelUsed: string }> {
+  const models = await getModelList(apiKey)
+
+  if (models.length === 0) {
+    throw new Error('No usable Gemini models found for this API key.')
+  }
+
+  let lastError: Error = new Error('All models exhausted without a successful response.')
+
+  for (const modelName of models) {
+    console.log(`[generate] selected model: ${modelName}`)
+
+    for (let attempt = 0; attempt <= MAX_RETRIES_PER_MODEL; attempt++) {
+      try {
+        const model = genAI.getGenerativeModel({
+          model: modelName,
+          systemInstruction: SYSTEM_PROMPT,
+          generationConfig: {
+            responseMimeType: 'application/json',
+            responseSchema: RECIPES_ARRAY_SCHEMA as never,
+            temperature: 0.85,
+            topP: 0.95,
+            maxOutputTokens: 16384,
+          },
+        })
+
+        const result = await model.generateContent(prompt)
+        const text = result.response.text()
+
+        console.log(`[generate] ✅ Success with model: ${modelName} (attempt ${attempt + 1})`)
+        return { text, modelUsed: modelName }
+
+      } catch (err: unknown) {
+        const message = err instanceof Error ? err.message : String(err)
+        lastError = err instanceof Error ? err : new Error(message)
+
+        // Auth errors: no point retrying any model
+        if (isAuthError(message)) {
+          console.error(`[generate] ❌ Auth error — aborting: ${message}`)
+          throw lastError
+        }
+
+        if (isRetryableGeminiError(message)) {
+          if (attempt < MAX_RETRIES_PER_MODEL) {
+            const backoff = BASE_BACKOFF_MS * Math.pow(2, attempt)  // 800ms → 1600ms
+            console.warn(`[generate] retrying after 503/429 on ${modelName} (attempt ${attempt + 1}), waiting ${backoff}ms`)
+            await sleep(backoff)
+            continue
+          }
+          // All retries for this model exhausted
+          console.warn('[generate] falling back to next discovered model')
+          break
+        }
+
+        // Non-retriable, non-auth error (e.g. schema issue, unexpected 400)
+        console.error(`[generate] ❌ Non-retriable error on ${modelName}:`, message)
+        break  // try next model anyway
+      }
+    }
+  }
+
+  throw lastError
+}
+
 // ── Route Handler ─────────────────────────────────────────────────────────────
 
 export async function POST(req: NextRequest) {
@@ -348,27 +540,17 @@ export async function POST(req: NextRequest) {
     )
   }
 
-  // ── STEP 1: Generate with Gemini ─────────────────────────────────────────────
+  // ── STEP 1: Discover live models, then generate ───────────────────────────────
 
   let generatedRecipes: GeneratedRecipe[]
 
   try {
     const genAI = new GoogleGenerativeAI(apiKey)
-
-    const model = genAI.getGenerativeModel({
-      model: 'gemini-2.5-flash',
-      systemInstruction: SYSTEM_PROMPT,
-      generationConfig: {
-        responseMimeType: 'application/json',
-        responseSchema: RECIPES_ARRAY_SCHEMA as never,
-        temperature: 0.85,   // Slightly lower than before — more consistent with professional schemas
-        topP: 0.95,
-        maxOutputTokens: 16384,  // Steps-as-objects are verbose — need more token budget
-      },
-    })
-
-    const result = await model.generateContent(buildUserPrompt(body))
-    const responseText = result.response.text()
+    const { text: responseText, modelUsed } = await generateWithDiscoveredModels(
+      genAI,
+      buildUserPrompt(body),
+      apiKey
+    )
 
     try {
       generatedRecipes = JSON.parse(responseText) as GeneratedRecipe[]
@@ -381,44 +563,39 @@ export async function POST(req: NextRequest) {
       )
     }
 
-    console.log(`[generate] ✅ ${generatedRecipes.length} recipes:`, generatedRecipes.map(r => r.title))
+    console.log(`[generate] ✅ ${generatedRecipes.length} recipes via ${modelUsed}:`, generatedRecipes.map(r => r.title))
 
   } catch (err: unknown) {
-    console.error('[generate] ❌ Gemini error:', err)
+    console.error('[generate] ❌ All Gemini models failed:', err)
     const message = err instanceof Error ? err.message : String(err)
 
-    if (message.includes('quota') || message.includes('429')) {
-      return NextResponse.json({ error: 'AI quota exceeded. Please wait a moment and try again.' }, { status: 429 })
+    if (isAuthError(message)) {
+      return NextResponse.json({ error: 'Invalid or missing Gemini API key.' }, { status: 401 })
     }
-    if (message.includes('API_KEY') || message.includes('401') || message.includes('403')) {
-      return NextResponse.json({ error: 'Invalid Gemini API key.' }, { status: 401 })
+    if (message.includes('quota') || message.includes('429') || message.includes('RESOURCE_EXHAUSTED')) {
+      return NextResponse.json({ error: 'All AI models are currently rate-limited. Please wait a moment and try again.' }, { status: 429 })
+    }
+    if (message.includes('503') || message.includes('overload') || message.includes('high demand')) {
+      return NextResponse.json({ error: 'AI service is experiencing high demand. Please try again in a few seconds.' }, { status: 503 })
     }
     return NextResponse.json({ error: `Generation failed: ${message}` }, { status: 500 })
   }
 
-  // ── STEP 2: Fetch photos in parallel ────────────────────────────────────────
+  // ── STEP 2: Fetch photos in parallel ─────────────────────────────────────────
 
   const imageUrls: string[] = await Promise.all(
     generatedRecipes.map(r => fetchUnsplashPhoto(r.title))
   )
 
-  // ── STEP 3: Save to Supabase (server-side only) ──────────────────────────────
+  // ── STEP 3: Save to Supabase ──────────────────────────────────────────────────
   //
-  // steps is now RecipeStep[] (array of objects). Supabase JSONB columns accept
-  // any JSON — so the insert works without schema changes to the steps column.
-  //
-  // For the NEW columns (substitutions, chef_insight) you must run this SQL
-  // in your Supabase SQL editor before deploying:
+  // For the new columns run this in your Supabase SQL editor if not already done:
   //
   //   ALTER TABLE recipes
   //     ADD COLUMN IF NOT EXISTS substitutions  JSONB  DEFAULT '[]'::JSONB,
   //     ADD COLUMN IF NOT EXISTS chef_insight   TEXT,
   //     ADD COLUMN IF NOT EXISTS goal           TEXT,
   //     ADD COLUMN IF NOT EXISTS difficulty     TEXT;
-  //
-  // The insertRecipe call below passes them as extra fields. Supabase's
-  // typed insert accepts extra keys not in the TypeScript type — they flow
-  // through to the DB as-is (the DB schema is the source of truth, not the TS type).
 
   const savedRows: (RecipeRow | null)[] = await Promise.all(
     generatedRecipes.map(async (r, i) => {
@@ -434,11 +611,9 @@ export async function POST(req: NextRequest) {
         fat: r.fat,
         fiber: r.fiber,
         ingredients: r.ingredients,
-        // steps is JSONB in Supabase — accepts the object array directly
         steps: r.steps as unknown as string[],
         tags: r.tags,
         image_url: imageUrls[i],
-        // New columns — TypeScript cast needed until you update RecipeRow interface
         ...({ substitutions: r.substitutions } as object),
         ...({ chef_insight: r.chef_insight } as object),
         ...({ goal: body.goal ?? 'Balanced' } as object),
@@ -455,7 +630,7 @@ export async function POST(req: NextRequest) {
     })
   )
 
-  // ── STEP 4: Build response ───────────────────────────────────────────────────
+  // ── STEP 4: Build response ────────────────────────────────────────────────────
 
   const recipes = generatedRecipes.map((gen, i) => ({
     id: savedRows[i]?.id ?? crypto.randomUUID(),
