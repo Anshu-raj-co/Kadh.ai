@@ -1,7 +1,7 @@
 # 🍳 Kadh.ai
 
-**An AI-powered culinary assistant that transforms your available ingredients into structured, macro-balanced recipes.**
-
+**Kadh.ai is an AI-powered culinary assistant that converts real-world constraints (ingredients, diet, allergies) into structured, nutritionally optimized recipes.**
+>  Full-stack AI application with real-time recipe generation, nutrition analysis, and persistent storage.
 ---
 
 ## 🚀 Live Demo
@@ -10,7 +10,26 @@ https://kadh-ai.vercel.app/
 
 ---
 
-## 📸 Demo Preview
+## ❓ Why Kadh.ai?
+
+Everyday cooking decisions are surprisingly complex:
+- Limited ingredients at home  
+- Dietary restrictions or allergies  
+- Confusion about what’s healthy or balanced  
+
+Most tools either provide static recipes or ignore real-world constraints.
+
+Kadh.ai solves this by transforming **user constraints into intelligent outputs** — generating recipes that are not just creative, but also nutritionally structured and context-aware.
+
+Instead of asking:
+> “What recipe should I follow?”
+
+Kadh.ai answers:
+> “What is the best possible meal I can make right now?”
+
+This project is designed as a step toward building a truly intelligent, decision-driven cooking assistant.
+
+## 🎬 Product Demo
 
 ### 🔹 Recipe Generation Flow
 
@@ -131,7 +150,25 @@ Kadh.ai follows a **secure client-server architecture**:
 * **Database:** Supabase (PostgreSQL)
 * **AI Provider:** Google Gemini 1.5 Flash
 * **Media:** Unsplash API
+## 🧩 Key Engineering Decisions
 
+- **Serverless API Layer (Next.js API Routes)**  
+  Chose server-side API routes to securely handle Gemini API calls and protect sensitive keys from client exposure.
+
+- **Parallel Processing for Performance**  
+  Designed the system to fetch AI-generated recipes, images (Unsplash), and database writes simultaneously, reducing total response latency.
+
+- **Structured Prompt Engineering**  
+  Crafted prompts to enforce strict dietary constraints, structured outputs, and nutritional consistency rather than relying on free-form generation.
+
+- **Supabase for Scalable Persistence**  
+  Used Supabase (PostgreSQL) to enable serverless, scalable storage of generated recipes with minimal backend overhead.
+
+- **Component-Based UI Architecture**  
+  Built reusable React components (RecipeCard, NutritionPanel, etc.) to maintain clean separation of concerns and scalability.
+
+- **Stateless System Design (Intentional Trade-off)**  
+  Kept the system stateless to ensure simplicity, fast response times, and reliability, while leaving room for future personalization features.
 ---
 
 ## 📂 Project Structure
@@ -201,6 +238,12 @@ npm run dev
 
 ---
 
+## ⚠️ Limitations
+
+- AI-generated recipes may vary in consistency due to the probabilistic nature of LLMs  
+- Nutritional values are estimated and not clinically accurate  
+- No user-level personalization or memory in the current version  
+- Performance depends on external API response times (Gemini, Unsplash, Supabase)  
 ## 🗺️ Future Roadmap
 
 * [ ] User authentication (Supabase Auth)
