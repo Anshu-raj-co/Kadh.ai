@@ -517,6 +517,7 @@ async function generateWithDiscoveredModels(
 // ── Route Handler ─────────────────────────────────────────────────────────────
 
 export async function POST(req: NextRequest) {
+  const totalStart = Date.now();
   let body: unknown
   try {
     body = await req.json()
@@ -545,12 +546,14 @@ export async function POST(req: NextRequest) {
   let generatedRecipes: GeneratedRecipe[]
 
   try {
+    const geminiStart = Date.now();
     const genAI = new GoogleGenerativeAI(apiKey)
     const { text: responseText, modelUsed } = await generateWithDiscoveredModels(
       genAI,
       buildUserPrompt(body),
       apiKey
     )
+    console.log("Gemini Latency:", Date.now() - geminiStart, "ms");
 
     try {
       generatedRecipes = JSON.parse(responseText) as GeneratedRecipe[]
@@ -583,9 +586,13 @@ export async function POST(req: NextRequest) {
 
   // ── STEP 2: Fetch photos in parallel ─────────────────────────────────────────
 
+  const unsplashStart = Date.now();
+
   const imageUrls: string[] = await Promise.all(
     generatedRecipes.map(r => fetchUnsplashPhoto(r.title))
-  )
+  );
+
+  console.log("Unsplash Latency:", Date.now() - unsplashStart, "ms");
 
   // ── STEP 3: Save to Supabase ──────────────────────────────────────────────────
   //
@@ -596,7 +603,7 @@ export async function POST(req: NextRequest) {
   //     ADD COLUMN IF NOT EXISTS chef_insight   TEXT,
   //     ADD COLUMN IF NOT EXISTS goal           TEXT,
   //     ADD COLUMN IF NOT EXISTS difficulty     TEXT;
-
+  const dbStart = Date.now();
   const savedRows: (RecipeRow | null)[] = await Promise.all(
     generatedRecipes.map(async (r, i) => {
       const row = await insertRecipe({
@@ -629,6 +636,7 @@ export async function POST(req: NextRequest) {
       return row
     })
   )
+  console.log("DB Latency:", Date.now() - dbStart, "ms");
 
   // ── STEP 4: Build response ────────────────────────────────────────────────────
 
@@ -656,6 +664,8 @@ export async function POST(req: NextRequest) {
     goal: body.goal ?? 'Balanced',
     saved: savedRows[i] !== null,
   }))
+
+  console.log("TOTAL Latency:", Date.now() - totalStart, "ms");
 
   return NextResponse.json({ recipes }, { status: 200 })
 }
