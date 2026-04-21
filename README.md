@@ -1,16 +1,16 @@
-# 🍳 Kadh.ai
+#  Kadh.ai
 
 **Kadh.ai is an AI-powered culinary assistant that converts real-world constraints (ingredients, diet, allergies) into structured, nutritionally optimized recipes.**
 >  Full-stack AI application with real-time recipe generation, nutrition analysis, and persistent storage.
 ---
 
-## 🚀 Live Demo
+##  Live Demo
 
 https://kadh-ai.vercel.app/
 
 ---
 
-## ❓ Why Kadh.ai?
+##  Why Kadh.ai?
 
 Everyday cooking decisions are surprisingly complex:
 - Limited ingredients at home  
@@ -29,14 +29,14 @@ Kadh.ai answers:
 
 This project is designed as a step toward building a truly intelligent, decision-driven cooking assistant.
 
-## 🎬 Product Demo
+##  Product Demo
 
-### 🔹 Recipe Generation Flow
+###  Recipe Generation Flow
 
 ![Kadhaidemonstration-ezgif com-video-to-gif-converter](https://github.com/user-attachments/assets/fb43bc3b-8d48-45ae-8c22-8478c49a3b15)
 
 
-### 🔹 Example Output
+###  Example Output
 
 **Input:**
 
@@ -65,7 +65,7 @@ onion, tomato, paneer
 
 ---
 
-## 🧠 Overview
+##  Overview
 
 Kadh.ai solves the everyday **“what’s for dinner?”** problem using AI.
 
@@ -73,23 +73,23 @@ By inputting available pantry ingredients, dietary restrictions, and allergies, 
 
 ---
 
-## ✨ Key Features
+##  Key Features
 
-### 🥘 Pantry-to-Plate Generation
+###  Pantry-to-Plate Generation
 
 Generate complete recipes instantly from available ingredients.
 
-### 🚫 Strict Dietary Guardrails
+###  Strict Dietary Guardrails
 
 Ensures allergies and restrictions are strictly enforced during generation.
 
-### 📊 Nutritional Intelligence
+###  Nutritional Intelligence
 
 * Calories
 * Macronutrients (Protein, Carbs, Fat, Fiber)
 * Serving size estimation
 
-### 🧠 Health Score (Transparent Logic)
+### Health Score (Transparent Logic)
 
 Each recipe is assigned a **Health Score (0–10)** based on:
 
@@ -102,17 +102,17 @@ Each recipe is assigned a **Health Score (0–10)** based on:
 
 ---
 
-### 🖼️ Dynamic Media Integration
+###  Dynamic Media Integration
 
 * Fetches relevant food images using Unsplash API
 * Improves visual experience automatically
 
-### 💾 Persistent Recipe Library
+###  Persistent Recipe Library
 
 * Save recipes to Supabase database
 * Browse previously generated recipes
 
-### 🎨 Modern UI/UX
+###  Modern UI/UX
 
 * Built with Tailwind CSS
 * Interactive recipe cards
@@ -120,7 +120,7 @@ Each recipe is assigned a **Health Score (0–10)** based on:
 
 ---
 
-## 🏗️ System Architecture
+##  System Architecture
 
 Kadh.ai follows a **secure client-server architecture**:
 
@@ -143,14 +143,14 @@ Kadh.ai follows a **secure client-server architecture**:
 
 ---
 
-## 🧰 Tech Stack
+##  Tech Stack
 
 * **Frontend:** Next.js (React), TypeScript, Tailwind CSS
 * **Backend:** Next.js API Routes (Serverless)
 * **Database:** Supabase (PostgreSQL)
 * **AI Provider:** Google Gemini 1.5 Flash
 * **Media:** Unsplash API
-## 🧩 Key Engineering Decisions
+##  Key Engineering Decisions
 
 - **Serverless API Layer (Next.js API Routes)**  
   Chose server-side API routes to securely handle Gemini API calls and protect sensitive keys from client exposure.
@@ -171,7 +171,7 @@ Kadh.ai follows a **secure client-server architecture**:
   Kept the system stateless to ensure simplicity, fast response times, and reliability, while leaving room for future personalization features.
 ---
 
-## 📂 Project Structure
+##  Project Structure
 
 ```
 Kadh.ai/
@@ -214,7 +214,7 @@ Kadh.ai/
 
 ---
 
-## ⚙️ Local Setup
+##  Local Setup
 
 ```bash
 git clone https://github.com/Anshu-raj-co/Kadh.ai.git
@@ -238,13 +238,13 @@ npm run dev
 
 ---
 
-## ⚠️ Limitations
+##  Limitations
 
 - AI-generated recipes may vary in consistency due to the probabilistic nature of LLMs  
 - Nutritional values are estimated and not clinically accurate  
 - No user-level personalization or memory in the current version  
 - Performance depends on external API response times (Gemini, Unsplash, Supabase)  
-## 🗺️ Future Roadmap
+##  Future Roadmap
 
 * [ ] User authentication (Supabase Auth)
 * [ ] Grocery list generator
@@ -253,7 +253,7 @@ npm run dev
 
 ---
 
-## 👨‍💻 Author
+##  Author
 
 **Anshu Raj**
 
@@ -262,6 +262,6 @@ npm run dev
 
 ---
 
-## ⭐ Final Note
+##  Final Note
 
 Kadh.ai is designed not just as a recipe generator, but as a **foundation for an intelligent cooking assistant**, combining AI, nutrition, and real-world usability.
